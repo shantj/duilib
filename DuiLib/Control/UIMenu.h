@@ -44,39 +44,39 @@ namespace DuiLib
 	};
 
 	///////////////////////////////////////////////
-	class ReceiverImplBase;
-	class ObserverImplBase
+	class ReceiverBase;
+	class ObserverBase
 	{
 	public:
-		virtual void AddReceiver(ReceiverImplBase* receiver) = 0;
-		virtual void RemoveReceiver(ReceiverImplBase* receiver) = 0;
+		virtual void AddReceiver(ReceiverBase* receiver) = 0;
+		virtual void RemoveReceiver(ReceiverBase* receiver) = 0;
 		virtual BOOL RBroadcast(ContextMenuParam param) = 0;
 	};
 	/////////////////////////////////////////////////
-	class ReceiverImplBase
+	class ReceiverBase
 	{
 	public:
-		virtual void AddObserver(ObserverImplBase* observer) = 0;
+		virtual void AddObserver(ObserverBase* observer) = 0;
 		virtual void RemoveObserver() = 0;
 		virtual BOOL Receive(ContextMenuParam param) = 0;
 	};
 	/////////////////////////////////////////////////
 
 template <typename ReturnT, typename ParamT>
-class ReceiverImpl;
-class ObserverImpl : public ObserverImplBase
+class Receiver;
+class Observer : public ObserverBase
 {
 	friend class Iterator;
 public:
-	ObserverImpl()
+	Observer()
 	{
 		m_pMainWndPaintManager = NULL;
 		m_pMenuCheckInfo = NULL;
 	}
 
-	virtual ~ObserverImpl()	{}
+	virtual ~Observer()	{}
 
-	virtual void AddReceiver(ReceiverImplBase* receiver)
+	virtual void AddReceiver(ReceiverBase* receiver)
 	{
 		if (receiver == NULL)
 			return;
@@ -85,7 +85,7 @@ public:
 		receiver->AddObserver(this);
 	}
 
-	virtual void RemoveReceiver(ReceiverImplBase* receiver)
+	virtual void RemoveReceiver(ReceiverBase* receiver)
 	{
 		if (receiver == NULL)
 			return;
@@ -114,11 +114,11 @@ public:
 
 	class Iterator
 	{
-		ObserverImpl & _tbl;
+		Observer & _tbl;
 		DWORD index;
-		ReceiverImplBase* ptr;
+		ReceiverBase* ptr;
 	public:
-		Iterator( ObserverImpl & table )
+		Iterator( Observer & table )
 			: _tbl( table ), index(0), ptr(NULL)
 		{}
 
@@ -126,7 +126,7 @@ public:
 			: _tbl( v._tbl ), index(v.index), ptr(v.ptr)
 		{}
 
-		ReceiverImplBase* next()
+		ReceiverBase* next()
 		{
 			if ( index >= _tbl.receivers_.size() )
 				return NULL;
@@ -166,7 +166,7 @@ public:
 	}
 
 protected:
-	typedef std::vector<ReceiverImplBase*> ReceiversVector;
+	typedef std::vector<ReceiverBase*> ReceiversVector;
 	ReceiversVector receivers_;
 
 	CPaintManagerUI* m_pMainWndPaintManager;
@@ -175,14 +175,14 @@ protected:
 
 ////////////////////////////////////////////////////
 template <typename ReturnT, typename ParamT>
-class ReceiverImpl : public ReceiverImplBase
+class Receiver : public ReceiverBase
 {
 public:
-	ReceiverImpl(){}
+	Receiver(){}
 
-	virtual ~ReceiverImpl()	{}
+	virtual ~Receiver()	{}
 
-	virtual void AddObserver(ObserverImplBase* observer)
+	virtual void AddObserver(ObserverBase* observer)
 	{
 		observers_.push_back(observer);
 	}
@@ -202,15 +202,15 @@ public:
 	}
 
 protected:
-	typedef std::vector<ObserverImplBase*> ObserversVector;
+	typedef std::vector<ObserverBase*> ObserversVector;
 	ObserversVector observers_;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////
 //
 
-typedef class ObserverImpl ContextMenuObserver;
-typedef class ReceiverImpl<BOOL, ContextMenuParam> ContextMenuReceiver;
+typedef class Observer ContextMenuObserver;
+typedef class Receiver<BOOL, ContextMenuParam> ContextMenuReceiver;
 
 extern ContextMenuObserver s_context_menu_observer;
 

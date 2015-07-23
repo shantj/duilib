@@ -289,7 +289,7 @@ namespace DuiLib {
 		param.hWnd = GetHWND();
 
 		ContextMenuObserver::Iterator iterator(s_context_menu_observer);
-		ReceiverImplBase* pReceiver = iterator.next();
+		ReceiverBase* pReceiver = iterator.next();
 		while( pReceiver != NULL ) {
 			CMenuWnd* pContextMenu = dynamic_cast<CMenuWnd*>(pReceiver);
 			if( pContextMenu != NULL && pContextMenu->GetHWND() ==  hFocusWnd ) {
@@ -467,7 +467,7 @@ namespace DuiLib {
 
 		RECT rcPreWindow = {0};
 		ContextMenuObserver::Iterator iterator(s_context_menu_observer);
-		ReceiverImplBase* pReceiver = iterator.next();
+		ReceiverBase* pReceiver = iterator.next();
 		while( pReceiver != NULL ) {
 			CMenuWnd* pContextMenu = dynamic_cast<CMenuWnd*>(pReceiver);
 			if( pContextMenu != NULL ) {
