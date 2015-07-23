@@ -1218,7 +1218,7 @@ LPCTSTR CListHeaderItemUI::GetClass() const
 LPVOID CListHeaderItemUI::GetInterface(LPCTSTR pstrName)
 {
     if( _tcscmp(pstrName, DUI_CTR_LISTHEADERITEM) == 0 ) return this;
-    return CControlUI::GetInterface(pstrName);
+    return CContainerUI::GetInterface(pstrName);
 }
 
 UINT CListHeaderItemUI::GetControlFlags() const
@@ -1229,7 +1229,7 @@ UINT CListHeaderItemUI::GetControlFlags() const
 
 void CListHeaderItemUI::SetEnabled(bool bEnable)
 {
-    CControlUI::SetEnabled(bEnable);
+    CContainerUI::SetEnabled(bEnable);
     if( !IsEnabled() ) {
         m_uButtonState = 0;
     }
@@ -1416,14 +1416,14 @@ void CListHeaderItemUI::SetAttribute(LPCTSTR pstrName, LPCTSTR pstrValue)
     else if( _tcscmp(pstrName, _T("pushedimage")) == 0 ) SetPushedImage(pstrValue);
     else if( _tcscmp(pstrName, _T("focusedimage")) == 0 ) SetFocusedImage(pstrValue);
     else if( _tcscmp(pstrName, _T("sepimage")) == 0 ) SetSepImage(pstrValue);
-    else CControlUI::SetAttribute(pstrName, pstrValue);
+    else CContainerUI::SetAttribute(pstrName, pstrValue);
 }
 
 void CListHeaderItemUI::DoEvent(TEventUI& event)
 {
     if( !IsMouseEnabled() && event.Type > UIEVENT__MOUSEBEGIN && event.Type < UIEVENT__MOUSEEND ) {
         if( m_pParent != NULL ) m_pParent->DoEvent(event);
-        else CControlUI::DoEvent(event);
+        else CContainerUI::DoEvent(event);
         return;
     }
 
@@ -1517,13 +1517,13 @@ void CListHeaderItemUI::DoEvent(TEventUI& event)
         }
         return;
     }
-    CControlUI::DoEvent(event);
+    CContainerUI::DoEvent(event);
 }
 
 SIZE CListHeaderItemUI::EstimateSize(SIZE szAvailable)
 {
     if( m_cxyFixed.cy == 0 ) return CDuiSize(m_cxyFixed.cx, m_pManager->GetDefaultFontInfo()->tm.tmHeight + 14);
-    return CControlUI::EstimateSize(szAvailable);
+    return CContainerUI::EstimateSize(szAvailable);
 }
 
 RECT CListHeaderItemUI::GetThumbRect() const
@@ -2387,6 +2387,35 @@ void CListContainerElementUI::DrawItemBk(HDC hDC, const RECT& rcItem)
 		RECT rcLine = { m_rcItem.left, m_rcItem.bottom - 1, m_rcItem.right, m_rcItem.bottom - 1 };
 		CRenderEngine::DrawLine(hDC, rcLine, 1, GetAdjustColor(pInfo->dwLineColor));
 	}
+}
+
+void CListContainerElementUI::SetPos(RECT rc, bool bNeedInvalidate /* = true */)
+{
+	CContainerUI::SetPos(rc, bNeedInvalidate);  
+	if( m_pOwner == NULL ) return;
+
+	CListUI* pListUI = static_cast<CListUI*>(m_pOwner);
+	if (pListUI == NULL)	return;
+
+	CListHeaderUI* listHeader = pListUI->GetHeader();
+	if (listHeader == NULL) return;
+
+	TListInfoUI* pInfo = m_pOwner->GetListInfo();  
+	int nCount = m_items.GetSize();  
+	for (int i = 0; i < nCount; i++)  
+	{  
+		CControlUI *pHorizontalLayout = static_cast<CControlUI*>(m_items[i]);  
+
+		CListHeaderItemUI *pHeaderItem = static_cast<CListHeaderItemUI*>(listHeader->GetItemAt(i));  
+		if (pHorizontalLayout != NULL && pHeaderItem != NULL)  
+		{  
+			RECT rtHeader = pHeaderItem->GetPos();  
+			RECT rt = pHorizontalLayout->GetPos();  
+			rt.left = rtHeader.left;  
+			rt.right = rtHeader.right;  
+			pHorizontalLayout->SetPos(rt);  
+		}  
+	}  
 }
 
 } // namespace DuiLib

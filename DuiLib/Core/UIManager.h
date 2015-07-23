@@ -244,6 +244,9 @@ public:
     static bool LoadPlugin(LPCTSTR pstrModuleName);
     static CStdPtrArray* GetPlugins();
 
+	bool UseParentResource(CPaintManagerUI* pm);
+	CPaintManagerUI* GetParentResource() const;
+
     DWORD GetDefaultDisabledColor() const;
     void SetDefaultDisabledColor(DWORD dwColor, bool bShared = false);
     DWORD GetDefaultFontColor() const;
@@ -430,6 +433,8 @@ private:
     static short m_L;
     static CStdPtrArray m_aPreMessages;
     static CStdPtrArray m_aPlugins;
+
+	 CPaintManagerUI* m_pParentResourcePM;
 
 public:
 	CStdPtrArray m_aTranslateAccelerator;

@@ -39,6 +39,9 @@ namespace DuiLib
 
 		void PaintText(HDC hDC);
 
+		virtual bool GetAutoCalcWidth() const;
+		virtual void SetAutoCalcWidth(bool bAutoCalcWidth);
+
 		void		SetEnabledEffect(bool _EnabledEffect);
 		bool		GetEnabledEffect();
 		void		SetText(LPCTSTR pstrText);
@@ -81,6 +84,7 @@ namespace DuiLib
 		UINT	m_uTextStyle;
 		RECT	m_rcTextPadding;
 		bool	m_bShowHtml;
+		bool	m_bAutoCalcWidth;
 
 		int						m_hAlign;
 		int						m_vAlign;

@@ -311,6 +311,21 @@ namespace DuiLib
 
 	SIZE CButtonUI::EstimateSize(SIZE szAvailable)
 	{
+		if (m_bAutoCalcWidth)
+		{
+			RECT rcText = {0};
+
+			SIZE size;
+			GetTextExtentPoint32(m_pManager->GetPaintDC(), m_sText, ::lstrlen(m_sText), &size);
+
+			CRenderEngine::DrawText(m_pManager->GetPaintDC(), m_pManager, rcText, m_sText, m_dwTextColor, m_iFont, DT_CALCRECT | m_uTextStyle);
+			int iWidth = size.cx + m_rcTextPadding.left + m_rcTextPadding.right;
+			if (iWidth < m_cxyMax.cx)
+			{
+				m_cxyFixed.cx = iWidth;
+			}
+		}
+
 		if( m_cxyFixed.cy == 0 ) return CDuiSize(m_cxyFixed.cx, m_pManager->GetFontInfo(GetFont())->tm.tmHeight + 8);
 		return CControlUI::EstimateSize(szAvailable);
 	}

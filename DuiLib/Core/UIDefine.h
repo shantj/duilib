@@ -75,6 +75,9 @@ union DuiMessageMapFunctions
 
 #define DUI_MSGTYPE_SELECTCHANGED 		   (_T("selectchanged"))
 
+//自定义
+#define DUI_MSGTYPE_ITEMRCLICK					(_T("itemrclick"))
+
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -265,6 +268,9 @@ protected:                                                                \
 #define  DUI_CTR_LISTLABELELEMENT                (_T("ListLabelElement"))
 
 #define  DUI_CTR_LISTCONTAINERELEMENT            (_T("ListContainerElement"))
+
+#define  DUI_CTR_LISTCTRL                      (_T("ListCtrl"))
+#define  DUI_CTR_LISTCTRLITEM				(_T("ListCtrlItem"))
 
 ///
 //////////////END控件名称宏定义//////////////////////////////////////////////////

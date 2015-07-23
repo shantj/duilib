@@ -566,6 +566,10 @@
 				Name="Layout"
 				>
 				<File
+					RelativePath=".\Layout\CListCtrlUI.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\Layout\UIChildLayout.cpp"
 					>
 				</File>
@@ -619,6 +623,10 @@
 				</File>
 				<File
 					RelativePath=".\Control\UIList.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\Control\UIMenu.cpp"
 					>
 				</File>
 				<File
@@ -739,6 +747,10 @@
 				Name="Layout"
 				>
 				<File
+					RelativePath=".\Layout\CListCtrlUI.h"
+					>
+				</File>
+				<File
 					RelativePath=".\Layout\UIChildLayout.h"
 					>
 				</File>
@@ -792,6 +804,10 @@
 				</File>
 				<File
 					RelativePath=".\Control\UIList.h"
+					>
+				</File>
+				<File
+					RelativePath=".\Control\UIMenu.h"
 					>
 				</File>
 				<File

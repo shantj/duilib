@@ -241,7 +241,7 @@ public:
 /////////////////////////////////////////////////////////////////////////////////////
 //
 
-class UILIB_API CListHeaderItemUI : public CControlUI
+class UILIB_API CListHeaderItemUI : public CContainerUI
 {
 public:
     CListHeaderItemUI();
@@ -431,6 +431,8 @@ public:
 
     void DrawItemText(HDC hDC, const RECT& rcItem);    
     void DrawItemBk(HDC hDC, const RECT& rcItem);
+
+	void SetPos(RECT rc, bool bNeedInvalidate /* = true */);
 
 protected:
     int m_iIndex;

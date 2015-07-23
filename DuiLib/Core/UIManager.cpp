@@ -110,7 +110,8 @@ m_bMouseCapture(false),
 m_bOffscreenPaint(true),
 m_bAlphaBackground(false),
 m_bUsedVirtualWnd(false),
-m_nOpacity(255)
+m_nOpacity(255),
+m_pParentResourcePM(NULL)
 {
 	if (m_SharedResInfo.m_DefaultFontInfo.sFontName.IsEmpty())
 	{
@@ -346,6 +347,28 @@ bool CPaintManagerUI::LoadPlugin(LPCTSTR pstrModuleName)
 CStdPtrArray* CPaintManagerUI::GetPlugins()
 {
     return &m_aPlugins;
+}
+
+bool CPaintManagerUI::UseParentResource(CPaintManagerUI* pm)
+{
+	if( pm == NULL ) {
+		m_pParentResourcePM = NULL;
+		return true;
+	}
+	if( pm == this ) return false;
+
+	CPaintManagerUI* pParentPM = pm->GetParentResource();
+	while( pParentPM ) {
+		if( pParentPM == this ) return false;
+		pParentPM = pParentPM->GetParentResource();
+	}
+	m_pParentResourcePM = pm;
+	return true;
+}
+
+CPaintManagerUI* CPaintManagerUI::GetParentResource() const
+{
+	return m_pParentResourcePM;
 }
 
 HWND CPaintManagerUI::GetPaintWindow() const
@@ -1611,6 +1634,7 @@ void CPaintManagerUI::SendNotify(TNotifyUI& Msg, bool bAsync /*= false*/)
 
 DWORD CPaintManagerUI::GetDefaultDisabledColor() const
 {
+	if( m_pParentResourcePM ) return m_pParentResourcePM->GetDefaultDisabledColor();
     return m_ResInfo.m_dwDefaultDisabledColor;
 }
 
@@ -1630,6 +1654,7 @@ void CPaintManagerUI::SetDefaultDisabledColor(DWORD dwColor, bool bShared)
 
 DWORD CPaintManagerUI::GetDefaultFontColor() const
 {
+	if( m_pParentResourcePM ) return m_pParentResourcePM->GetDefaultFontColor();
 	return m_ResInfo.m_dwDefaultFontColor;
 }
 
@@ -1649,6 +1674,7 @@ void CPaintManagerUI::SetDefaultFontColor(DWORD dwColor, bool bShared)
 
 DWORD CPaintManagerUI::GetDefaultLinkFontColor() const
 {
+	if( m_pParentResourcePM ) return m_pParentResourcePM->GetDefaultLinkFontColor();
     return m_ResInfo.m_dwDefaultLinkFontColor;
 }
 
@@ -1668,6 +1694,7 @@ void CPaintManagerUI::SetDefaultLinkFontColor(DWORD dwColor, bool bShared)
 
 DWORD CPaintManagerUI::GetDefaultLinkHoverFontColor() const
 {
+	if( m_pParentResourcePM ) return m_pParentResourcePM->GetDefaultLinkHoverFontColor();
     return m_ResInfo.m_dwDefaultLinkHoverFontColor;
 }
 
@@ -1687,6 +1714,7 @@ void CPaintManagerUI::SetDefaultLinkHoverFontColor(DWORD dwColor, bool bShared)
 
 DWORD CPaintManagerUI::GetDefaultSelectedBkColor() const
 {
+	if( m_pParentResourcePM ) return m_pParentResourcePM->GetDefaultSelectedBkColor();
     return m_ResInfo.m_dwDefaultSelectedBkColor;
 }
 
@@ -1706,6 +1734,8 @@ void CPaintManagerUI::SetDefaultSelectedBkColor(DWORD dwColor, bool bShared)
 
 TFontInfo* CPaintManagerUI::GetDefaultFontInfo()
 {
+	if( m_pParentResourcePM ) return m_pParentResourcePM->GetDefaultFontInfo();
+
 	if (m_ResInfo.m_DefaultFontInfo.sFontName.IsEmpty())
 	{
 		if( m_SharedResInfo.m_DefaultFontInfo.tm.tmHeight == 0 ) 
@@ -1884,6 +1914,7 @@ HFONT CPaintManagerUI::GetFont(LPCTSTR pStrFontName, int nSize, bool bBold, bool
 		}
 	}
 
+	if( m_pParentResourcePM ) return m_pParentResourcePM->GetFont(pStrFontName, nSize, bBold, bUnderline, bItalic);
 	return NULL;
 }
 
@@ -2085,6 +2116,8 @@ TFontInfo* CPaintManagerUI::GetFontInfo(HFONT hFont)
 		::GetTextMetrics(m_hDcPaint, &pFontInfo->tm);
 		::SelectObject(m_hDcPaint, hOldFont);
 	}
+
+	if( m_pParentResourcePM ) return m_pParentResourcePM->GetFontInfo(hFont);
 	return pFontInfo;
 }
 
@@ -2092,6 +2125,7 @@ const TImageInfo* CPaintManagerUI::GetImage(LPCTSTR bitmap)
 {
     TImageInfo* data = static_cast<TImageInfo*>(m_ResInfo.m_ImageHash.Find(bitmap));
     if( !data ) data = static_cast<TImageInfo*>(m_SharedResInfo.m_ImageHash.Find(bitmap));
+	if( !data && m_pParentResourcePM ) return m_pParentResourcePM->GetImage(bitmap);
     return data;
 }
 
@@ -2390,6 +2424,9 @@ LPCTSTR CPaintManagerUI::GetDefaultAttributeList(LPCTSTR pStrControlName) const
 {
     CDuiString* pDefaultAttr = static_cast<CDuiString*>(m_ResInfo.m_AttrHash.Find(pStrControlName));
 	if( !pDefaultAttr ) pDefaultAttr = static_cast<CDuiString*>(m_SharedResInfo.m_AttrHash.Find(pStrControlName));
+
+	if( !pDefaultAttr && m_pParentResourcePM ) return m_pParentResourcePM->GetDefaultAttributeList(pStrControlName);
+
 	if (pDefaultAttr) return pDefaultAttr->GetData();
 	return NULL;
 }
