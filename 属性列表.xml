@@ -382,6 +382,7 @@
 		<Attribute name="transshadow1" default="100" type="INT" comment="阴影透明度"/>
 		<Attribute name="transtext" default="100" type="INT" comment="字体色彩透明度"/>
 		<Attribute name="transtext1" default="100" type="INT" comment="字体色彩透明度"/>
+		<Attribute name="autocalcwidth" default="false" type="BOOL" comment="是否自动计算宽度"/>
 	</Label>
 	<Button parent="Label" notifies="setfocus killfocus timer menu click windowinit(root)">
 		<Attribute name="name" default="" type="STRING" comment="控件名字，同一窗口内必须唯一，如(testbtn)"/>
@@ -426,7 +427,23 @@
 		<Attribute name="hottextcolor" default="0x00000000" type="DWORD" comment="鼠标悬浮字体颜色，0表示不使用此颜色,如(0xFFFF0000)"/>
 		<Attribute name="pushedtextcolor" default="0x00000000" type="DWORD" comment="鼠标按下字体颜色，0表示不使用此颜色,如(0xFFFF0000)"/>
 		<Attribute name="focusedtextcolor" default="0x00000000" type="DWORD" comment="获得焦点字体颜色，0表示不使用此颜色,如(0xFFFF0000)"/>
+		<Attribute name="autocalcwidth" default="false" type="BOOL" comment="是否自动计算宽度"/>
 	</Button>
+	<Menu parent="CListUI" notifies="setfocus killfocus timer menu itemselect windowinit(root)">
+		<Attribute name="inset" default="0,0,0,0" type="RECT" comment="菜单的高度等于所有菜单项的高度之和，加上inset属性的top和bottom"/>
+		<!-- Menu标签的属性要通过Default来定义，为了让下级菜单也能拥有同样的外观，其他属性设置见List -->
+	</Menu>
+	<MenuElement parent="CListContainerElementUI" notifies="click valuechanged WM_MENUCLICK">
+		<Attribute name="icon" default="" type="STRING" comment="菜单项的图标图片"/>
+		<Attribute name="iconsize" default="0,0" type="SIZE" comment="图片的大小，最大为26x26"/>
+		<Attribute name="checkitem" default="false" type="BOOL" comment="是否有复选功能"/>
+		<Attribute name="ischeck" default="false" type="BOOL" comment="是否被选中（前提是开启了复选功能，复选功能属性应该写在本属性的前面）"/>
+		<Attribute name="linetype" default="false" type="BOOL" comment="是否是分割线（开启后将不会显示图标）"/>
+		<Attribute name="linepadding" default="29,0,7,0" type="RECT" comment="分割线的外边据"/>
+		<Attribute name="linecolor" default="0xFFBCBFC4" type="DWORD" comment="分割线的颜色"/>
+		<Attribute name="expland" default="false" type="BOOL" comment="是否显示下级菜单的小三角图片（需要通过Default标签设置ExplandIcon属性图片的路径）"/>
+		<Attribute name="height" default="30" type="INT" comment="菜单项高度（分割线默认高度是6）"/>
+	</MenuElement>
 	<Option parent="Button" notifies="setfocus killfocus timer menu click selectchanged windowinit(root)">
 		<Attribute name="name" default="" type="STRING" comment="控件名字，同一窗口内必须唯一，如(testbtn)"/>
 		<Attribute name="pos" default="0,0,0,0" type="RECT" comment="位置，如果为float控件则指定位置和大小，否则只指定大小,如(0,0,100,100)"/>
@@ -511,6 +528,7 @@
 		<Attribute name="disabledtextcolor" default="0x00000000" type="DWORD" comment="disabled字体颜色，0表示使用默认disabled字体颜色,如(0xFFFF0000)"/>
 		<Attribute name="textpadding" default="2,0,2,0" type="RECT" comment="文字显示的边距,如(2,0,2,0)"/>
 		<Attribute name="showhtml" default="false" type="BOOL" comment="是否使用类html富文本绘制,如(false)"/>
+		<Attribute name="autocalcwidth" default="false" type="BOOL" comment="是否自动计算宽度"/>
 	</Text>
 	<Progress parent="Label" notifies="setfocus killfocus timer menu windowinit(root)">
 		<Attribute name="name" default="" type="STRING" comment="控件名字，同一窗口内必须唯一，如(testbtn)"/>
