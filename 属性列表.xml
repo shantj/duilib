@@ -428,6 +428,7 @@
 		<Attribute name="pushedtextcolor" default="0x00000000" type="DWORD" comment="鼠标按下字体颜色，0表示不使用此颜色,如(0xFFFF0000)"/>
 		<Attribute name="focusedtextcolor" default="0x00000000" type="DWORD" comment="获得焦点字体颜色，0表示不使用此颜色,如(0xFFFF0000)"/>
 		<Attribute name="autocalcwidth" default="false" type="BOOL" comment="是否自动计算宽度"/>
+		<Attribute name="setcursor" default="true" type="BOOL" comment="点击或者鼠标移动过去，鼠标指针变成手型"/>
 	</Button>
 	<Menu parent="CListUI" notifies="setfocus killfocus timer menu itemselect windowinit(root)">
 		<Attribute name="inset" default="0,0,0,0" type="RECT" comment="菜单的高度等于所有菜单项的高度之和，加上inset属性的top和bottom"/>
