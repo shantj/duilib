@@ -16,6 +16,17 @@
 		<Attribute name="linkhoverfontcolor" default="0xFFD3215F" type="DWORD" comment="默认的linkhoverfont字体颜色,如(0xFFD3215F)"/>
 		<Attribute name="selectedcolor" default="0xFFBAE4FF" type="DWORD" comment="默认的selected字体颜色,如(0xFFBAE4FF)"/>
 		<Attribute name="showdirty" default="false" type="BOOL" comment="绘制脏矩形(屏幕上更新的区域被称为脏矩形)"/>
+		<Attribute name="showshadow" default="false" type="BOOL" comment="是否启用窗体阴影"/>
+		<Attribute name="shadowimage" default="" type="STRING" comment="阴影图片，使用此属性后自动屏蔽算法阴影(不支持source等属性设置)"/>
+		<Attribute name="shadowcorner" default="0,0,0,0" type="RECT" comment="图片阴影的九宫格描述"/>
+		<Attribute name="shadowpadding" default="0,0,0,0" type="RECT" comment="阴影偏移量"/>
+		<Attribute name="shadowsize" default="0" type="BYTE" comment="算法阴影的宽度(-20到20)"/>
+		<Attribute name="shadowsharpness" default="255" type="BYTE" comment="算法阴影的锐度"/>
+		<Attribute name="shadowdarkness" default="255" type="BYTE" comment="算法阴影的深度(相当于透明度)"/>
+		<Attribute name="shadowposition" default="0,0" type="SIZE" comment="算法阴影的偏移量"/>
+		<Attribute name="shadowcolor" default="0x000000" type="DWORD" comment="算法阴影的颜色，RGB格式，不支持透明度，使用shadowdarkness设置透明度"/>
+		<Attribute name="trayiconid" default="" type="UINT" comment="图标资源ID，将显示在托盘"/>
+		<Attribute name="traytiptext" default="" type="STRING" comment="托盘图标在鼠标闲停时提示的文本，备注：有效长度小于64字节"/>
 	</Window>
 	<ChildLayout parent="Container" >
 		<Attribute name="xmlfile" default="" type="STRING" comment="子窗体XML布局文件"/>
@@ -368,6 +379,7 @@
 		<Attribute name="enabledeffect" default="false" type="BOOL" comment="是否使用字体特效，使用下面文字特效属性必须该属性设置为true方有效"/>
 		<Attribute name="align" default="left" type="STRING" comment="文字横向对齐方式,取值left、center、right"/>
 		<Attribute name="valign" default="center" type="STRING" comment="文字纵向对齐方式,取值top、center、bottom"/>
+		<Attribute name="hotalign" default="left" type="STRING" comment="编辑过程中文字对齐方式,取值left、right、center、top、bottom，如(center)"/>
 		<Attribute name="rhaa" default="0" type="STRING" comment="字体质量0-5"/>
 		<Attribute name="enabledstroke" default="false" type="BOOL" comment="是否使用描边效果"/>
 		<Attribute name="strokecolor" default="0x00000000" type="STRING" comment="字体描边的颜色"/>
@@ -383,6 +395,7 @@
 		<Attribute name="transtext" default="100" type="INT" comment="字体色彩透明度"/>
 		<Attribute name="transtext1" default="100" type="INT" comment="字体色彩透明度"/>
 		<Attribute name="autocalcwidth" default="false" type="BOOL" comment="是否自动计算宽度"/>
+		<Attribute name="autocalcheight" default="false" type="BOOL" comment="是否自动计算高度"/>
 	</Label>
 	<Button parent="Label" notifies="setfocus killfocus timer menu click windowinit(root)">
 		<Attribute name="name" default="" type="STRING" comment="控件名字，同一窗口内必须唯一，如(testbtn)"/>
@@ -428,6 +441,7 @@
 		<Attribute name="pushedtextcolor" default="0x00000000" type="DWORD" comment="鼠标按下字体颜色，0表示不使用此颜色,如(0xFFFF0000)"/>
 		<Attribute name="focusedtextcolor" default="0x00000000" type="DWORD" comment="获得焦点字体颜色，0表示不使用此颜色,如(0xFFFF0000)"/>
 		<Attribute name="autocalcwidth" default="false" type="BOOL" comment="是否自动计算宽度"/>
+		<Attribute name="autocalcheight" default="false" type="BOOL" comment="是否自动计算高度"/>
 		<Attribute name="setcursor" default="true" type="BOOL" comment="点击或者鼠标移动过去，鼠标指针变成手型"/>
 	</Button>
 	<Menu parent="CListUI" notifies="setfocus killfocus timer menu itemselect windowinit(root)">
@@ -444,6 +458,7 @@
 		<Attribute name="linecolor" default="0xFFBCBFC4" type="DWORD" comment="分割线的颜色"/>
 		<Attribute name="expland" default="false" type="BOOL" comment="是否显示下级菜单的小三角图片（需要通过Default标签设置ExplandIcon属性图片的路径）"/>
 		<Attribute name="height" default="30" type="INT" comment="菜单项高度（分割线默认高度是6）"/>
+		<Attribute name="width" default="225" type="INT" comment="菜单项宽度"/>
 	</MenuElement>
 	<Option parent="Button" notifies="setfocus killfocus timer menu click selectchanged windowinit(root)">
 		<Attribute name="name" default="" type="STRING" comment="控件名字，同一窗口内必须唯一，如(testbtn)"/>
@@ -493,6 +508,7 @@
 		<Attribute name="selectedtextcolor" default="0x00000000" type="DWORD" comment="选中状态字体颜色，0表示不使用此颜色,如(0xFFFF0000)"/>
 		<Attribute name="group" default="" type="STRING" comment="所属组的名称，可不设"/>
 		<Attribute name="selected" default="false" type="BOOL" comment="是否选中"/>
+		<Attribute name="setcursor" default="true" type="BOOL" comment="点击或者鼠标移动过去，鼠标指针变成手型"/>
 	</Option>
 	<Text parent="Label" notifies="setfocus killfocus timer menu link windowinit(root)">
 		<Attribute name="name" default="" type="STRING" comment="控件名字，同一窗口内必须唯一，如(testbtn)"/>
@@ -530,6 +546,7 @@
 		<Attribute name="textpadding" default="2,0,2,0" type="RECT" comment="文字显示的边距,如(2,0,2,0)"/>
 		<Attribute name="showhtml" default="false" type="BOOL" comment="是否使用类html富文本绘制,如(false)"/>
 		<Attribute name="autocalcwidth" default="false" type="BOOL" comment="是否自动计算宽度"/>
+		<Attribute name="autocalcheight" default="false" type="BOOL" comment="是否自动计算高度"/>
 	</Text>
 	<Progress parent="Label" notifies="setfocus killfocus timer menu windowinit(root)">
 		<Attribute name="name" default="" type="STRING" comment="控件名字，同一窗口内必须唯一，如(testbtn)"/>
