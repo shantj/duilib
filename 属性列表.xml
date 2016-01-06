@@ -1131,4 +1131,7 @@
 		<Attribute name="selitemtextcolor" default="0x00000000" type="DWORD" comment="item被选中时文本颜色"/>
 		<Attribute name="selhotitemtextcolor" default="0x00000000" type="DWORD" comment="item被选中时且鼠标进入时的文本颜色"/>
 	</TreeNode>
+    <ListCtrl parent="">
+        <Attribute name="selectframeimage" default="" type="STRING" comment="鼠标移动多选时的背景框效果"/>
+	</ListCtrl>
 </Controls>
