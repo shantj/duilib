@@ -250,6 +250,7 @@ HWND CWindowWnd::Create(HWND hwndParent, LPCTSTR pstrName, DWORD dwStyle, DWORD 
     if( GetSuperClassName() == NULL && !RegisterWindowClass() ) return NULL;
     m_hWnd = ::CreateWindowEx(dwExStyle, GetWindowClassName(), pstrName, dwStyle, x, y, cx, cy, hwndParent, hMenu, CPaintManagerUI::GetInstance(), this);
     ASSERT(m_hWnd!=NULL);
+	m_hParent = hwndParent;
     return m_hWnd;
 }
 
@@ -282,12 +283,12 @@ void CWindowWnd::ShowWindow(bool bShow /*= true*/, bool bTakeFocus /*= false*/)
     ::ShowWindow(m_hWnd, bShow ? (bTakeFocus ? SW_SHOWNORMAL : SW_SHOWNOACTIVATE) : SW_HIDE);
 }
 
-UINT CWindowWnd::ShowModal()
+UINT CWindowWnd::ShowModal(bool bShow)
 {
     ASSERT(::IsWindow(m_hWnd));
     UINT nRet = 0;
     HWND hWndParent = GetWindowOwner(m_hWnd);
-    ::ShowWindow(m_hWnd, SW_SHOWNORMAL);
+	::ShowWindow(m_hWnd, bShow? SW_SHOWNORMAL : SW_HIDE);
     ::EnableWindow(hWndParent, FALSE);
     MSG msg = { 0 };
     while( ::IsWindow(m_hWnd) && ::GetMessage(&msg, NULL, 0, 0) ) {
@@ -363,6 +364,11 @@ void CWindowWnd::SetIcon(UINT nRes)
     hIcon = (HICON)::LoadImage(CPaintManagerUI::GetInstance(), MAKEINTRESOURCE(nRes), IMAGE_ICON, ::GetSystemMetrics(SM_CXSMICON), ::GetSystemMetrics(SM_CYSMICON), LR_DEFAULTCOLOR);
     ASSERT(hIcon);
     ::SendMessage(m_hWnd, WM_SETICON, (WPARAM) FALSE, (LPARAM) hIcon);
+}
+
+HWND CWindowWnd::GetParentHwnd() const
+{
+	return m_hParent;
 }
 
 bool CWindowWnd::RegisterWindowClass()

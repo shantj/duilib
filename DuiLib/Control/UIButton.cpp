@@ -9,6 +9,7 @@ namespace DuiLib
 		, m_dwPushedTextColor(0)
 		, m_dwFocusedTextColor(0)
 		,m_dwHotBkColor(0)
+		,m_blSetCursor(TRUE)
 	{
 		m_uTextStyle = DT_SINGLELINE | DT_VCENTER | DT_CENTER;
 	}
@@ -106,7 +107,10 @@ namespace DuiLib
 			// return;
 		}
 		if( event.Type == UIEVENT_SETCURSOR ) {
-			::SetCursor(::LoadCursor(NULL, MAKEINTRESOURCE(IDC_HAND)));
+			if (m_blSetCursor)
+			{
+				::SetCursor(::LoadCursor(NULL, MAKEINTRESOURCE(IDC_HAND)));
+			}
 			return;
 		}
 		CLabelUI::DoEvent(event);
@@ -311,18 +315,29 @@ namespace DuiLib
 
 	SIZE CButtonUI::EstimateSize(SIZE szAvailable)
 	{
+		SIZE size;
+		GetTextExtentPoint32(m_pManager->GetPaintDC(), m_sText, ::lstrlen(m_sText), &size);
+
 		if (m_bAutoCalcWidth)
 		{
 			RECT rcText = {0};
-
-			SIZE size;
-			GetTextExtentPoint32(m_pManager->GetPaintDC(), m_sText, ::lstrlen(m_sText), &size);
 
 			CRenderEngine::DrawText(m_pManager->GetPaintDC(), m_pManager, rcText, m_sText, m_dwTextColor, m_iFont, DT_CALCRECT | m_uTextStyle);
 			int iWidth = size.cx + m_rcTextPadding.left + m_rcTextPadding.right;
 			if (iWidth < m_cxyMax.cx)
 			{
 				m_cxyFixed.cx = iWidth;
+			}
+		}
+		if (m_bAutoCalcHeight)
+		{
+			RECT rcText = {0};
+
+			CRenderEngine::DrawText(m_pManager->GetPaintDC(), m_pManager, rcText, m_sText, m_dwTextColor, m_iFont, DT_CALCRECT | m_uTextStyle);
+			int iHeight = size.cy + m_rcTextPadding.top + m_rcTextPadding.bottom;
+			if (iHeight < m_cxyMax.cy)
+			{
+				m_cxyFixed.cy = iHeight;
 			}
 		}
 
@@ -366,6 +381,10 @@ namespace DuiLib
 			LPTSTR pstr = NULL;
 			DWORD clrColor = _tcstoul(pstrValue, &pstr, 16);
 			SetFocusedTextColor(clrColor);
+		}
+		else if (_tcscmp(pstrName, _T("setcursor")) == 0)
+		{
+			SetMouseCursor(_tcscmp(pstrValue, _T("true")) == 0);
 		}
 		else CLabelUI::SetAttribute(pstrName, pstrValue);
 	}
@@ -440,4 +459,10 @@ namespace DuiLib
 Label_ForeImage:
 		DrawImage(hDC, m_diFore);
 	}
+
+	void CButtonUI::SetMouseCursor(BOOL blFlag/*=TRUE*/)
+	{
+		m_blSetCursor = blFlag;
+	}
+
 }

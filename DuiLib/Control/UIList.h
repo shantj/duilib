@@ -38,6 +38,7 @@ typedef struct tagTListInfoUI
     DWORD dwLineColor;
     bool bShowHtml;
     bool bMultiExpandable;
+	TDrawInfo diSelectedFrame;
 } TListInfoUI;
 
 
@@ -57,6 +58,7 @@ public:
     virtual int GetCurSel() const = 0;
     virtual bool SelectItem(int iIndex, bool bTakeFocus = false) = 0;
     virtual void DoEvent(TEventUI& event) = 0;
+	virtual bool SelectRange(int iIndex, bool bTakeFocus = false) = 0;
 };
 
 class IListUI : public IListOwnerUI
@@ -78,7 +80,8 @@ public:
     virtual IListOwnerUI* GetOwner() = 0;
     virtual void SetOwner(CControlUI* pOwner) = 0;
     virtual bool IsSelected() const = 0;
-    virtual bool Select(bool bSelect = true) = 0;
+    virtual bool Select(bool bSelect = true, bool bCallBack = true, bool bRclick = false) = 0;
+	virtual bool SelectMulti(bool bSelect=true) = 0;
     virtual bool IsExpanded() const = 0;
     virtual bool Expand(bool bExpand = true) = 0;
     virtual void DrawItemText(HDC hDC, const RECT& rcItem) = 0;
@@ -104,6 +107,10 @@ public:
     void SetScrollSelect(bool bScrollSelect);
     int GetCurSel() const;
     bool SelectItem(int iIndex, bool bTakeFocus = false);
+	bool SelectRange(int iIndex, bool bTakeFocus = false);
+
+	bool SelectMulti(int iIndex, bool bSelect=true);
+	int GetSelectCount();
 
     CListHeaderUI* GetHeader() const;  
     CContainerUI* GetList() const;
@@ -191,6 +198,12 @@ public:
     virtual CScrollBarUI* GetVerticalScrollBar() const;
     virtual CScrollBarUI* GetHorizontalScrollBar() const;
     BOOL SortItems(PULVCompareFunc pfnCompare, UINT_PTR dwData);
+
+	TDrawInfo GetSelectedItemDrawInfo();
+
+private:
+	void UpdateSelectionForRect(RECT rect);
+
 protected:
     bool m_bScrollSelect;
     int m_iCurSel;
@@ -199,6 +212,12 @@ protected:
     CListBodyUI* m_pList;
     CListHeaderUI* m_pHeader;
     TListInfoUI m_ListInfo;
+
+	bool m_bStartRect;
+	POINT m_startPoint;
+
+	int m_iFirstSelect;
+	int m_iSelectCount;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -324,7 +343,8 @@ public:
     void SetVisible(bool bVisible = true);
 
     bool IsSelected() const;
-    bool Select(bool bSelect = true);
+    bool Select(bool bSelect = true, bool bCallBack=true, bool bRclick = false);
+	bool SelectMulti(bool bSelect=true);
     bool IsExpanded() const;
     bool Expand(bool bExpand = true);
 
@@ -418,7 +438,8 @@ public:
     void SetEnabled(bool bEnable = true);
 
     bool IsSelected() const;
-    bool Select(bool bSelect = true);
+	bool Select(bool bSelect = true, bool bCallBack = true, bool bRclick = false);
+	bool SelectMulti(bool bSelect=true);
     bool IsExpanded() const;
     bool Expand(bool bExpand = true);
 

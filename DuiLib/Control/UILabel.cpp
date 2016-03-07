@@ -38,7 +38,8 @@ namespace DuiLib
 		m_dwStrokeColor(0),
 		m_EnabledShadow(false),
 		m_GradientLength(0),
-		m_bAutoCalcWidth(false)
+		m_bAutoCalcWidth(false),
+		m_bAutoCalcHeight(false)
 	{
 		m_ShadowOffset.X		= 0.0f;
 		m_ShadowOffset.Y		= 0.0f;
@@ -156,6 +157,13 @@ namespace DuiLib
 
 			CRenderEngine::DrawText(m_pManager->GetPaintDC(), m_pManager, rcText, m_sText, m_dwTextColor, m_iFont, DT_CALCRECT | m_uTextStyle);
 			m_cxyFixed.cx = rcText.right - rcText.left + m_rcTextPadding.left + m_rcTextPadding.right;
+		}
+		if (m_bAutoCalcHeight)
+		{
+			RECT rcText = {0};
+
+			CRenderEngine::DrawText(m_pManager->GetPaintDC(), m_pManager, rcText, m_sText, m_dwTextColor, m_iFont, DT_CALCRECT | m_uTextStyle);
+			m_cxyFixed.cy = rcText.bottom - rcText.top + m_rcTextPadding.bottom + m_rcTextPadding.top;
 		}
 
 		if( m_cxyFixed.cy == 0 ) return CDuiSize(m_cxyFixed.cx, m_pManager->GetFontInfo(GetFont())->tm.tmHeight + 4);
@@ -288,6 +296,9 @@ namespace DuiLib
 		else if( _tcscmp(pstrName, _T("autocalcwidth")) == 0 ) {
 			SetAutoCalcWidth(_tcscmp(pstrValue, _T("true")) == 0);
 		}
+		else if (_tcscmp(pstrName, _T("autocalcheight")) == 0 ) {
+			SetAutoCalcHeight(_tcscmp(pstrValue, _T("true")) == 0);
+		}
 		else CControlUI::SetAttribute(pstrName, pstrValue);
 	}
 
@@ -403,6 +414,16 @@ namespace DuiLib
 	void CLabelUI::SetAutoCalcWidth(bool bAutoCalcWidth)
 	{
 		m_bAutoCalcWidth = bAutoCalcWidth;
+	}
+
+	bool CLabelUI::GetAutoCalcHeight() const
+	{
+		return m_bAutoCalcHeight;
+	}
+
+	void CLabelUI::SetAutoCalcHeight(bool bAutoCalcHeight)
+	{
+		m_bAutoCalcHeight = bAutoCalcHeight;
 	}
 
 	//************************************

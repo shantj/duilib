@@ -41,6 +41,8 @@ namespace DuiLib
 
 		virtual bool GetAutoCalcWidth() const;
 		virtual void SetAutoCalcWidth(bool bAutoCalcWidth);
+		virtual bool GetAutoCalcHeight() const;
+		virtual void SetAutoCalcHeight(bool bAutoCalcHeight);
 
 		void		SetEnabledEffect(bool _EnabledEffect);
 		bool		GetEnabledEffect();
@@ -85,6 +87,7 @@ namespace DuiLib
 		RECT	m_rcTextPadding;
 		bool	m_bShowHtml;
 		bool	m_bAutoCalcWidth;
+		bool	m_bAutoCalcHeight;
 
 		int						m_hAlign;
 		int						m_vAlign;

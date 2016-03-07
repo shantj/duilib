@@ -27,23 +27,24 @@
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifdef UILIB_STATIC
-#	define UILIB_API 
-#else
-#	if defined(UILIB_EXPORTS)
-#		if	defined(_MSC_VER)
-#			define UILIB_API __declspec(dllexport)
-#		else
-#			define UILIB_API 
-#		endif
-#	else
-#		if defined(_MSC_VER)
-#			define UILIB_API __declspec(dllimport)
-#		else
-#			define UILIB_API 
-#		endif
-#	endif
-#endif
+#	define UILIB_API
+//#ifdef UILIB_STATIC
+//#	define UILIB_API 
+//#else
+//#	if defined(UILIB_EXPORTS)
+//#		if	defined(_MSC_VER)
+//#			define UILIB_API __declspec(dllexport)
+//#		else
+//#			define UILIB_API 
+//#		endif
+//#	else
+//#		if defined(_MSC_VER)
+//#			define UILIB_API __declspec(dllimport)
+//#		else
+//#			define UILIB_API 
+//#		endif
+//#	endif
+//#endif
 
 #define UILIB_COMDAT __declspec(selectany)
 
@@ -66,6 +67,8 @@
 #include <assert.h>
 #include <crtdbg.h>
 #include <malloc.h>
+
+#pragma comment(lib,"winmm.lib")
 
 #include "Utils/Utils.h"
 #include "Utils/UIDelegate.h"
@@ -110,5 +113,8 @@
 //×Ô¶¨Òå
 #include "Layout/CListCtrlUI.h"
 #include "Control/UIMenu.h"
+#include "Core/UITimer.h"
+#include "Utils/DuiTrayIcon.h"
+#include "Utils/UIShadow.h"
 //#include "Control/UIFlash.h"
 

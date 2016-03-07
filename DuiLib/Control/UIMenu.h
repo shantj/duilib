@@ -28,12 +28,12 @@ namespace DuiLib
 	enum MenuItemDefaultInfo
 	{
 		ITEM_DEFAULT_HEIGHT = 30,		//每一个item的默认高度（只在竖状排列时自定义）
-		ITEM_DEFAULT_WIDTH = 150,		//窗口的默认宽度
+		ITEM_DEFAULT_WIDTH = 225,		//窗口的默认宽度
 
 		ITEM_DEFAULT_ICON_WIDTH = 26,	//默认图标所占宽度
 		ITEM_DEFAULT_ICON_SIZE = 16,	//默认图标的大小
 
-		ITEM_DEFAULT_EXPLAND_ICON_WIDTH = 20,	//默认下级菜单扩展图标所占宽度
+		ITEM_DEFAULT_EXPLAND_ICON_WIDTH = 35,	//默认下级菜单扩展图标所占宽度
 		ITEM_DEFAULT_EXPLAND_ICON_SIZE = 9,		//默认下级菜单扩展图标的大小
 
 		DEFAULT_LINE_LEFT_INSET = ITEM_DEFAULT_ICON_WIDTH + 3,	//默认分隔线的左边距
@@ -242,7 +242,7 @@ public:
 //
 
 class CMenuElementUI;
-class UILIB_API CMenuWnd : public CWindowWnd, public ContextMenuReceiver, public IDialogBuilderCallback
+class UILIB_API CMenuWnd : public CWindowWnd, public ContextMenuReceiver, public IDialogBuilderCallback, public INotifyUI
 {
 public:
 	CMenuWnd();
@@ -261,7 +261,7 @@ public:
 		DWORD dwAlignment = eMenuAlignment_Left | eMenuAlignment_Top);
     LPCTSTR GetWindowClassName() const;
     void OnFinalMessage(HWND hWnd);
-	void Notify(TNotifyUI& msg);
+	virtual void Notify(TNotifyUI& msg);
 	CControlUI* CreateControl(LPCTSTR pstrClassName);
 
 	LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -279,6 +279,9 @@ public:
 
 	// 重新调整子菜单的大小
 	void ResizeSubMenu();
+
+	//设置菜单使能状态
+	void SetMenuEnabled(LPCTSTR name, bool enabled);
 
 public:
 	POINT m_BasedPoint;

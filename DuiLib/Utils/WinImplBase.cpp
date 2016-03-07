@@ -8,8 +8,6 @@ namespace DuiLib
 
 //////////////////////////////////////////////////////////////////////////
 
-LPBYTE WindowImplBase::m_lpResourceZIPBuffer=NULL;
-
 DUI_BEGIN_MESSAGE_MAP(WindowImplBase,CNotifyPump)
 	DUI_ON_MSGTYPE(DUI_MSGTYPE_CLICK,OnClick)
 DUI_END_MESSAGE_MAP()
@@ -29,7 +27,7 @@ LRESULT WindowImplBase::ResponseDefaultKeyEvent(WPARAM wParam)
 	}
 	else if (wParam == VK_ESCAPE)
 	{
-		Close();
+		//Close();
 		return TRUE;
 	}
 
@@ -61,7 +59,7 @@ CControlUI* WindowImplBase::CreateControl(LPCTSTR pstrClass)
 	return NULL;
 }
 
-LRESULT WindowImplBase::MessageHandler(UINT uMsg, WPARAM wParam, LPARAM /*lParam*/, bool& /*bHandled*/)
+LRESULT WindowImplBase::MessageHandler(UINT uMsg, WPARAM wParam, LPARAM /*lParam*/, bool& bHandled)
 {
 	if (uMsg == WM_KEYDOWN)
 	{
@@ -69,7 +67,8 @@ LRESULT WindowImplBase::MessageHandler(UINT uMsg, WPARAM wParam, LPARAM /*lParam
 		{
 		case VK_RETURN:
 		case VK_ESCAPE:
-			return ResponseDefaultKeyEvent(wParam);
+			bHandled = !!ResponseDefaultKeyEvent(wParam);
+			return 0;
 		default:
 			break;
 		}
@@ -308,15 +307,12 @@ LRESULT WindowImplBase::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& 
 			dwSize = ::SizeofResource(m_PaintManager.GetResourceDll(), hResource);
 			if( dwSize == 0 )
 				return 0L;
-			m_lpResourceZIPBuffer = new BYTE[ dwSize ];
-			if (m_lpResourceZIPBuffer != NULL)
-			{
-				::CopyMemory(m_lpResourceZIPBuffer, (LPBYTE)::LockResource(hGlobal), dwSize);
-			}
+
+			m_PaintManager.SetResourceZip((LPBYTE)::LockResource(hGlobal), dwSize);
+
 #if defined(WIN32) && !defined(UNDER_CE)
 			::FreeResource(hResource);
 #endif
-			m_PaintManager.SetResourceZip(m_lpResourceZIPBuffer, dwSize);
 		}
 		break;
 	}
@@ -438,7 +434,7 @@ void WindowImplBase::OnClick(TNotifyUI& msg)
 	CDuiString sCtrlName = msg.pSender->GetName();
 	if( sCtrlName == _T("closebtn") )
 	{
-		Close();
+		Close(IDCANCEL);
 		return; 
 	}
 	else if( sCtrlName == _T("minbtn"))

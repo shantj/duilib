@@ -43,15 +43,40 @@ namespace DuiLib
 		if (m_hWnd == NULL)
 		{
 			RECT rcPos = CalPos();
-			UINT uStyle = WS_CHILD;
+			UINT uStyle = m_pOwner->GetTimeStyle();
 			Create(m_pOwner->GetManager()->GetPaintWindow(), NULL, uStyle, 0, rcPos);
 			SetWindowFont(m_hWnd, m_pOwner->GetManager()->GetFontInfo(m_pOwner->GetFont())->hFont, TRUE);
 		}
 
-		if (m_pOwner->GetText().IsEmpty())
-			::GetLocalTime(&m_pOwner->m_sysTime);
+		/*if (m_pOwner->GetText().IsEmpty())
+		{
+			if (m_pOwner->m_bSetRange)
+			{
+				GetLocalTime(&m_pOwner->m_sysTime);
+				COleDateTime mintime, systime;
+				mintime.SetDateTime(m_pOwner->m_pMinTime.wYear, m_pOwner->m_pMinTime.wMonth, m_pOwner->m_pMinTime.wDay, 
+					m_pOwner->m_pMinTime.wHour, m_pOwner->m_pMinTime.wMinute, m_pOwner->m_pMinTime.wSecond);
+				systime.SetDateTime(m_pOwner->m_sysTime.wYear, m_pOwner->m_sysTime.wMonth, m_pOwner->m_sysTime.wDay, 
+					m_pOwner->m_sysTime.wHour, m_pOwner->m_sysTime.wMinute, m_pOwner->m_sysTime.wSecond);
+				if (systime < mintime)
+				{
+					m_pOwner->m_sysTime = m_pOwner->m_pMinTime;
+				}
+			}
+		}*/
 
+		::SendMessage(m_hWnd, DTM_SETFORMAT, 0, (LPARAM)m_pOwner->GetFormatString().GetData());
 		::SendMessage(m_hWnd, DTM_SETSYSTEMTIME, 0, (LPARAM)&m_pOwner->m_sysTime);
+
+		//设置时间范围
+		if (m_pOwner->m_bSetRange)
+		{
+			SYSTEMTIME sysTimes[2];
+			sysTimes[0] = m_pOwner->m_pMinTime;
+			sysTimes[1] = m_pOwner->m_pMaxTime;
+			::SendMessage(m_hWnd, DTM_SETRANGE, GDTR_MIN|GDTR_MAX, (LPARAM)sysTimes);
+			//::SendMessage(m_hWnd, MCS_NOTODAY, 0, 1);
+		}
 		::ShowWindow(m_hWnd, SW_SHOWNOACTIVATE);
 		::SetFocus(m_hWnd);
 
@@ -167,9 +192,12 @@ namespace DuiLib
 		::GetLocalTime(&m_sysTime);
 		m_bReadOnly = false;
 		m_pWindow = NULL;
-		m_nDTUpdateFlag=DT_UPDATE;
-		UpdateText();		// add by:daviyang35 初始化界面时显示时间
-		m_nDTUpdateFlag = DT_NONE;
+		//m_nDTUpdateFlag=DT_UPDATE;
+		m_uStyle = WS_CHILD | DTS_SHORTDATEFORMAT;
+		m_sFormat = _T("yyyy-MM-dd");
+		m_bSetRange = false;
+//		UpdateText();		// add by:daviyang35 初始化界面时显示时间
+		//m_nDTUpdateFlag = DT_NONE;
 	}
 
 	LPCTSTR CDateTimeUI::GetClass() const
@@ -191,7 +219,23 @@ namespace DuiLib
 	void CDateTimeUI::SetTime(SYSTEMTIME* pst)
 	{
 		m_sysTime = *pst;
-		Invalidate();
+		m_nDTUpdateFlag=DT_UPDATE;
+		UpdateText();
+		m_nDTUpdateFlag=DT_NONE;
+		//Invalidate();
+	}
+
+	void CDateTimeUI::GetRange(SYSTEMTIME& pMinTime, SYSTEMTIME& pMaxTime)
+	{
+		pMinTime = m_pMinTime;
+		pMaxTime = m_pMaxTime;
+	}
+
+	void CDateTimeUI::SetRange(SYSTEMTIME* pMinTime, SYSTEMTIME* pMaxTime)
+	{
+		m_pMinTime = *pMinTime;
+		m_pMaxTime = *pMaxTime;
+		m_bSetRange = true;
 	}
 
 	void CDateTimeUI::SetReadOnly(bool bReadOnly)
@@ -207,13 +251,21 @@ namespace DuiLib
 
 	void CDateTimeUI::UpdateText()
 	{
-		if (m_nDTUpdateFlag == DT_DELETE)
+		/*if (m_nDTUpdateFlag == DT_DELETE)
 			SetText(_T(""));
-		else if (m_nDTUpdateFlag == DT_UPDATE)
+		else */if (m_nDTUpdateFlag == DT_UPDATE)
 		{
 			CDuiString sText;
-			sText.SmallFormat(_T("%4d-%02d-%02d"),
-				m_sysTime.wYear, m_sysTime.wMonth, m_sysTime.wDay, m_sysTime.wHour, m_sysTime.wMinute);
+			if ((m_uStyle & DTS_TIMEFORMAT) == DTS_TIMEFORMAT)
+			{
+				sText.SmallFormat(_T("%02d:%02d"),
+					m_sysTime.wHour, m_sysTime.wMinute);
+			}
+			else
+			{
+				sText.SmallFormat(_T("%4d-%02d-%02d"),
+					m_sysTime.wYear, m_sysTime.wMonth, m_sysTime.wDay);
+			}
 			SetText(sText);
 		}
 	}
@@ -291,4 +343,42 @@ namespace DuiLib
 
 		CLabelUI::DoEvent(event);
 	}
+
+	void CDateTimeUI::SetAttribute(LPCTSTR pstrName, LPCTSTR pstrValue)
+	{
+		if( _tcscmp(pstrName, _T("style")) == 0 )
+		{
+			if( _tcsstr(pstrValue, _T("time")) != NULL ) {
+				m_uStyle &= ~DTS_SHORTDATEFORMAT;
+				m_uStyle |= DTS_TIMEFORMAT;
+				m_sFormat = _T("HH:mm");
+			}
+			else if ( _tcsstr(pstrValue, _T("date")) != NULL) {
+				m_uStyle &= ~DTS_TIMEFORMAT;
+				m_uStyle |= DTS_SHORTDATEFORMAT;
+				m_sFormat = _T("yyy-MM-dd");
+			}
+
+			//初始化界面时显示时间
+			m_nDTUpdateFlag=DT_UPDATE;
+			UpdateText();
+			m_nDTUpdateFlag=DT_NONE;
+		}
+		/*if( _tcscmp(pstrName, _T("format")) == 0 )
+		{
+			m_sFormat = pstrValue;
+		}*/
+		else CLabelUI::SetAttribute(pstrName, pstrValue);
+	}
+
+	UINT CDateTimeUI::GetTimeStyle()
+	{
+		return m_uStyle;
+	}
+
+	DuiLib::CDuiString CDateTimeUI::GetFormatString()
+	{
+		return m_sFormat;
+	}
+
 }

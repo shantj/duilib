@@ -77,6 +77,8 @@ union DuiMessageMapFunctions
 
 //×Ô¶¨Òå
 #define DUI_MSGTYPE_ITEMRCLICK					(_T("itemrclick"))
+#define DUI_MSGTYPE_ITEMSELECTMUTIL		   	   (_T("itemselectmutil"))
+#define DUI_MSGTYPE_ITEMUNSELECT 		   	   (_T("itemunselect"))
 
 
 //////////////////////////////////////////////////////////////////////////

@@ -23,6 +23,7 @@ public:
 	void DoEvent(TEventUI& event);
 	void SetAttribute(LPCTSTR pstrName, LPCTSTR pstrValue);
 
+	bool SetItemIndex(CControlUI* pControl, int iIndex);
 	int GetCount() const;
 	bool Add(CControlUI* pControl);
 	bool AddAt(CControlUI* pControl, int iIndex);
@@ -57,11 +58,11 @@ public:
  	void SetItemShowHtml(bool bShowHtml = true);
 // 	RECT GetItemTextPadding() const;
 // 	DWORD GetItemTextColor() const;
-// 	DWORD GetItemBkColor() const;
+ 	DWORD GetItemBkColor() const;
 // 	LPCTSTR GetItemBkImage() const;
 // 	DWORD GetSelectedItemTextColor() const;
 // 	DWORD GetSelectedItemBkColor() const;
-// 	LPCTSTR GetSelectedItemImage() const;
+ 	//LPCTSTR GetSelectedItemImage() const;
 // 	DWORD GetHotItemTextColor() const;
 // 	DWORD GetHotItemBkColor() const;
 // 	LPCTSTR GetHotItemImage() const;
@@ -69,11 +70,27 @@ public:
 // 	DWORD GetDisabledItemBkColor() const;
 // 	LPCTSTR GetDisabledItemImage() const;
 // 	DWORD GetItemLineColor() const;
+	void SetSelectedFrameImage(LPCTSTR pStrImage);
+	TDrawInfo GetSelectedFrameImage();
+
+	bool SelectRange(int iIndex, bool bTakeFocus=false);
+	bool SelectMulti(int iIndex, bool bSelect=true);
+	int GetSelectCount();
+
+private:
+	void UpdateSelectionForRect(RECT rect);
+	bool SelectItem(int iIndex, bool bTakeFocus, bool ctrl);
 
 protected:
 	int m_iCurSel;
 	TListInfoUI m_ListInfo;
 	bool m_bScrollSelect;
+
+	bool m_bStartRect;
+	POINT m_startPoint;
+
+	int m_iFirstSelect;
+	int m_iSelectCount;
 };
 
 
@@ -101,7 +118,8 @@ public:
 	void DrawItemBk(HDC hDC, const RECT& rcItem);
 
 	bool IsSelected() const;
-	bool Select(bool bSelect = true);
+	bool Select(bool bSelect = true, bool bCallBack=true, bool bRclick = false);
+	bool SelectMulti(bool bSelect=true);
 
 	void SetPos(RECT rc, bool bNeedInvalidate /* = true */);
 

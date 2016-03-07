@@ -247,6 +247,7 @@ HANDLE CPaintManagerUI::GetResourceZipHandle()
 void CPaintManagerUI::SetInstance(HINSTANCE hInst)
 {
     m_hInstance = hInst;
+	CShadowUI::Initialize(hInst); 
 }
 
 void CPaintManagerUI::SetCurrentPath(LPCTSTR pStrPath)
@@ -513,6 +514,11 @@ bool CPaintManagerUI::IsShowUpdateRect() const
 void CPaintManagerUI::SetShowUpdateRect(bool show)
 {
     m_bShowUpdateRect = show;
+}
+
+CShadowUI* CPaintManagerUI::GetShadow()
+{
+	return &m_shadow;
 }
 
 bool CPaintManagerUI::PreMessageHandler(UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT& /*lRes*/)
@@ -1204,6 +1210,9 @@ bool CPaintManagerUI::AttachDialog(CControlUI* pControl)
     m_bUpdateNeeded = true;
     m_bFirstLayout = true;
     m_bFocusNeeded = true;
+
+	m_shadow.Create(this);
+
     // Initiate all control
     return InitControls(pControl);
 }
@@ -2773,6 +2782,11 @@ bool CPaintManagerUI::RemoveTranslateAccelerator(ITranslateAccelerator *pTransla
 void CPaintManagerUI::UsedVirtualWnd(bool bUsed)
 {
 	m_bUsedVirtualWnd = bUsed;
+}
+
+CDuiTrayIcon& CPaintManagerUI::GetTrayObject()
+{
+	return mDuiTray;
 }
 
 } // namespace DuiLib

@@ -262,6 +262,10 @@ namespace DuiLib {
 				}
 			}
 
+			CShadowUI *pShadow = m_pOwner->GetManager()->GetShadow();
+			pShadow->CopyShadow(m_pm.GetShadow());
+			pShadow->ShowShadow(false);
+
 			m_pm.AttachDialog(m_pLayout);
 
 			ResizeSubMenu();
@@ -272,11 +276,14 @@ namespace DuiLib {
 			CDialogBuilder builder;
 
 			CControlUI* pRoot = builder.Create(m_xml, UINT(0), this, &m_pm);
+			m_pm.GetShadow()->ShowShadow(false);
 			m_pm.AttachDialog(pRoot);
 
 			ResizeMenu();
 		}
 
+		m_pm.GetShadow()->ShowShadow(true);
+		m_pm.GetShadow()->Create(&m_pm);
 		return 0;
 	}
 
@@ -413,6 +420,30 @@ namespace DuiLib {
 			rc.top = rc.bottom - nHeight;
 		}
 
+
+		int with  =  GetSystemMetrics(SM_CXSCREEN);
+		int height=  GetSystemMetrics(SM_CYSCREEN);
+		if (with - rc.left < nWidth)
+		{
+			rc.right = rc.left;
+			rc.left = rc.right - nWidth;
+		}
+		if (height - rc.top < nHeight)
+		{
+			rc.bottom = rc.top;
+			rc.top = rc.bottom - nHeight;
+		}
+		if (rc.right < nWidth)
+		{
+			rc.left = rc.right;
+			rc.right = rc.left + nWidth;
+		}
+		if (rc.bottom < nHeight)
+		{
+			rc.top = rc.bottom;
+			rc.bottom = rc.top + nHeight;
+		}
+
 		SetForegroundWindow(m_hWnd);
 		MoveWindow(m_hWnd, rc.left, rc.top, rc.GetWidth(), rc.GetHeight(), FALSE);
 		SetWindowPos(m_hWnd, HWND_TOPMOST, rc.left, rc.top,
@@ -519,6 +550,30 @@ namespace DuiLib {
 		}
 
 		MoveWindow(m_hWnd, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top + m_pLayout->GetInset().top + m_pLayout->GetInset().bottom, FALSE);
+	}
+
+	void CMenuWnd::SetMenuEnabled(LPCTSTR name, bool enabled)
+	{
+		CControlUI* root = m_pm.GetRoot();
+		if (root == NULL)
+		{
+			return;
+		}
+
+		CControlUI* subControl = m_pm.FindControl(name);
+		if (subControl)
+		{
+			subControl->SetEnabled(enabled);
+			CStdPtrArray* subControlArray = m_pm.FindSubControlsByClass(subControl, L"LabelUI");
+			for (int i=0; i<subControlArray->GetSize(); i++)
+			{
+				CControlUI* item = static_cast<CControlUI*>(subControlArray->GetAt(i));
+				if (item)
+				{
+					item->SetEnabled(enabled);
+				}
+			}
+		}
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////////
@@ -716,14 +771,15 @@ namespace DuiLib {
 					SetChecked(!GetChecked());
 					if (s_context_menu_observer.GetManager() != NULL)
 					{
+						ContextMenuParam param;
+						param.hWnd = m_pManager->GetPaintWindow();
+						param.wParam = 1;
+						s_context_menu_observer.RBroadcast(param);
+
 						CDuiString* strPost = new CDuiString(GetName().GetData());
 						if (!PostMessage(s_context_menu_observer.GetManager()->GetPaintWindow(), WM_MENUCLICK, (WPARAM)(strPost), (LPARAM)(GetChecked() == TRUE)))
 							delete strPost;
 					}
-					ContextMenuParam param;
-					param.hWnd = m_pManager->GetPaintWindow();
-					param.wParam = 1;
-					s_context_menu_observer.RBroadcast(param);
 				}
 			}
 			return;
@@ -952,6 +1008,9 @@ namespace DuiLib {
 		}
 		else if	( _tcscmp(pstrName, _T("height")) == 0){
 			SetFixedHeight(_ttoi(pstrValue));
+		}
+		else if	( _tcscmp(pstrName, _T("width")) == 0){
+			SetFixedWidth(_ttoi(pstrValue));
 		}
 		else
 			CListContainerElementUI::SetAttribute(pstrName, pstrValue);

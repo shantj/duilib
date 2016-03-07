@@ -25,6 +25,10 @@ DuiLib::CListCtrlUI::CListCtrlUI(void) : m_iCurSel(-1), m_bScrollSelect(false)
 	m_ListInfo.bMultiExpandable = false;
 	::ZeroMemory(&m_ListInfo.rcTextPadding, sizeof(m_ListInfo.rcTextPadding));
 	::ZeroMemory(&m_ListInfo.rcColumn, sizeof(m_ListInfo.rcColumn));
+
+	m_bStartRect = false;
+	m_iFirstSelect = -1;
+	m_iSelectCount = 0;
 }
 
 LPCTSTR CListCtrlUI::GetClass() const
@@ -56,35 +60,95 @@ int CListCtrlUI::GetCurSel() const
 
 bool CListCtrlUI::SelectItem(int iIndex, bool bTakeFocus /*= false*/)
 {
-	if( iIndex == m_iCurSel ) return true;
-
-	int iOldSel = m_iCurSel;
+	BOOL bCtrl = (GetKeyState(VK_CONTROL) & 0x8000);
 	// We should first unselect the currently selected item
-	if( m_iCurSel >= 0 ) {
-		CControlUI* pControl = CContainerUI::GetItemAt(m_iCurSel);
-		if( !pControl ) return false;
-		IListItemUI* pListItem = static_cast<IListItemUI*>(pControl->GetInterface(_T("ListItem")));
-		if( pListItem != NULL ) pListItem->Select(false);
+
+	return SelectItem(iIndex, bTakeFocus, bCtrl);
+}
+
+bool CListCtrlUI::SelectItem(int iIndex, bool bTakeFocus, bool ctrl)
+{
+	if(!ctrl)
+	{
+		for(int i=0;i<GetCount();i++)
+		{
+			if(i!=iIndex)
+			{
+				CControlUI* pControl = CContainerUI::GetItemAt(i);
+				if( pControl != NULL) 
+				{
+					IListItemUI* pListItem = static_cast<IListItemUI*>(pControl->GetInterface(_T("ListItem")));
+					if( pListItem == NULL ) 
+					{
+						continue;
+					}
+					if (pListItem->IsSelected())
+					{
+						pListItem->Select(false, false);
+					}
+				}
+			}
+		}
 
 		m_iCurSel = -1;
+		m_iFirstSelect = -1;
+		m_iSelectCount = 0;
 	}
+
+	int iOldSel = m_iCurSel;
 	if( iIndex < 0 ) return false;
 
 	CControlUI* pControl = CContainerUI::GetItemAt(iIndex);
 	if( pControl == NULL ) return false;
-	if( !pControl->IsVisible() ) return false;
-	if( !pControl->IsEnabled() ) return false;
+	/*if( !pControl->IsVisible() ) return false;
+	if( !pControl->IsEnabled() ) return false;*/
 
 	IListItemUI* pListItem = static_cast<IListItemUI*>(pControl->GetInterface(_T("ListItem")));
 	if( pListItem == NULL ) return false;
-	m_iCurSel = iIndex;
-	if( !pListItem->Select(true) ) {
-		m_iCurSel = -1;
-		return false;
+
+	if (pListItem->IsSelected() == false)
+	{
+		m_iSelectCount--;
+		if (m_iSelectCount == 0)
+		{
+			m_iCurSel = m_iFirstSelect = -1;
+		}
+		else if (iIndex == m_iCurSel)
+		{
+			//找到第一个选项
+			for (int i=0; i<GetCount(); i++)
+			{
+				CControlUI* pControl = CContainerUI::GetItemAt(i);
+				if( pControl != NULL) {
+					IListItemUI* pListItem = static_cast<IListItemUI*>(pControl->GetInterface(_T("ListItem")));
+					if( pListItem == NULL ) continue;;
+					if (pListItem->IsSelected())
+					{
+						m_iCurSel = m_iFirstSelect = i;
+					}
+				}
+			}
+		}
+		if (m_pManager)
+		{
+			m_pManager->SendNotify(this, DUI_MSGTYPE_ITEMUNSELECT, m_iCurSel, iOldSel);
+		}
+		return true;
 	}
+
+	if( iIndex == m_iCurSel )
+	{
+		return true;
+	}
+
+	m_iCurSel = iIndex;
+	m_iFirstSelect = iIndex;
+	m_iSelectCount++;
+
 	EnsureVisible(m_iCurSel);
 	if( bTakeFocus ) pControl->SetFocus();
-	if( m_pManager != NULL ) {
+	if( m_pManager != NULL ) 
+	{
 		m_pManager->SendNotify(this, DUI_MSGTYPE_ITEMSELECT, m_iCurSel, iOldSel);
 	}
 
@@ -109,13 +173,92 @@ void CListCtrlUI::DoEvent(TEventUI& event)
 		m_bFocused = false;
 		return;
 	}
+	/*if (event.Type == UIEVENT_BUTTONDOWN)
+	{
+		SelectItem(-1);
+		if( IsEnabled() ){
+			m_pManager->SendNotify(this, DUI_MSGTYPE_ITEMCLICK);
+		}
+		return;
+	}*/
 	if ( event.Type == UIEVENT_RBUTTONDOWN )
 	{
+		SelectItem(-1);
 		if( IsEnabled() ){
 			m_pManager->SendNotify(this, DUI_MSGTYPE_ITEMRCLICK);
 		}
 		return;
 	}
+
+	/*********鼠标滑动进行多选**********/
+	if (event.Type == UIEVENT_BUTTONDOWN)
+	{
+		SelectItem(-1);
+		if( IsEnabled() ){
+			m_pManager->SendNotify(this, DUI_MSGTYPE_ITEMCLICK);
+		}
+
+		m_bStartRect = true;
+		m_startPoint = event.ptMouse; //记录开始点
+		return;
+	}
+	if (event.Type == UIEVENT_MOUSEMOVE)
+	{
+		if(m_bStartRect)
+		{
+			HWND hwnd = m_pManager->GetPaintWindow();
+			RECT rcClient;
+			POINT point = event.ptMouse;
+			RECT rect = {0};
+			rcClient = this->GetPos();
+
+			if(((point.x >= m_startPoint.x-20 && point.x <= m_startPoint.x+20 ) 
+				&& (point.y >= m_startPoint.y-20 && point.y <= m_startPoint.y+20)))
+				return;
+			if ((point.x <= rcClient.left || point.x >= rcClient.right || point.y <= rcClient.top || point.y >= rcClient.bottom))
+			{
+				return;
+			}
+
+			::InvalidateRect(hwnd, &rcClient, FALSE);
+			UpdateWindow(hwnd);
+
+			if(point.x<m_startPoint.x && point.y < m_startPoint.y)
+			{
+				RECT rectTemp = {point.x,point.y,m_startPoint.x,m_startPoint.y};
+				rect  = rectTemp;
+			}
+			else if(point.x>m_startPoint.x && point.y < m_startPoint.y)
+			{
+				RECT rectTemp = {m_startPoint.x,point.y,point.x,m_startPoint.y};
+				rect  = rectTemp;
+			}
+			else if(point.x<m_startPoint.x && point.y > m_startPoint.y)
+			{
+				RECT rectTemp = {point.x,m_startPoint.y,m_startPoint.x,point.y};
+				rect  = rectTemp;
+			}
+			else 
+			{
+				RECT rectTemp = {m_startPoint.x,m_startPoint.y,point.x,point.y};
+				rect  = rectTemp;
+			}
+
+			UpdateSelectionForRect(rect);
+			CRenderEngine::DrawImage(m_pManager->GetPaintDC(), m_pManager, rect, m_rcPaint, GetSelectedFrameImage());
+		}
+		return;
+	}
+	if (event.Type == UIEVENT_BUTTONUP)
+	{
+		m_bStartRect = false;
+
+		HWND hwnd = m_pManager->GetPaintWindow();
+		InvalidateRect(hwnd, NULL, TRUE);
+		UpdateWindow(hwnd);
+		return;
+	}
+	/*********************************/
 
 	switch( event.Type ) {
 	case UIEVENT_KEYDOWN:
@@ -263,7 +406,36 @@ void CListCtrlUI::SetAttribute(LPCTSTR pstrName, LPCTSTR pstrValue)
 		SetItemLineColor(clrColor);
 	}
 	else if( _tcscmp(pstrName, _T("itemshowhtml")) == 0 ) SetItemShowHtml(_tcscmp(pstrValue, _T("true")) == 0);
+	else if ( _tcscmp(pstrName, _T("selectframeimage")) == 0 )  SetSelectedFrameImage(pstrValue);
 	else CContainerUI::SetAttribute(pstrName, pstrValue);
+}
+
+bool CListCtrlUI::SetItemIndex(CControlUI* pControl, int iIndex)
+{
+	// We also need to recognize header sub-items
+	int iOrginIndex = CContainerUI::GetItemIndex(pControl);
+	if( iOrginIndex == -1 ) return false;
+	if( iOrginIndex == iIndex ) return true;
+
+	IListItemUI* pSelectedListItem = NULL;
+	if( m_iCurSel >= 0 ) pSelectedListItem = 
+		static_cast<IListItemUI*>(GetItemAt(m_iCurSel)->GetInterface(_T("ListItem")));
+	IListItemUI* pFirstSelectItem = NULL;
+	if (m_iFirstSelect >= 0) pFirstSelectItem = 
+		static_cast<IListItemUI*>(GetItemAt(m_iFirstSelect)->GetInterface(_T("ListItem")));
+	if( !CContainerUI::SetItemIndex(pControl, iIndex) ) return false;
+	int iMinIndex = min(iOrginIndex, iIndex);
+	int iMaxIndex = max(iOrginIndex, iIndex);
+	for(int i = iMinIndex; i < iMaxIndex + 1; ++i) {
+		CControlUI* p = CContainerUI::GetItemAt(i);
+		IListItemUI* pListItem = static_cast<IListItemUI*>(p->GetInterface(_T("ListItem")));
+		if( pListItem != NULL ) {
+			pListItem->SetIndex(i);
+		}
+	}
+	if( m_iCurSel >= 0 && pSelectedListItem != NULL ) m_iCurSel = pSelectedListItem->GetIndex();
+	if( m_iFirstSelect >= 0 && pFirstSelectItem != NULL ) m_iFirstSelect = pFirstSelectItem->GetIndex();
+	return true;
 }
 
 int CListCtrlUI::GetCount() const
@@ -305,6 +477,7 @@ bool CListCtrlUI::AddAt(CControlUI* pControl, int iIndex)
 		}
 	}
 	if( m_iCurSel >= iIndex ) m_iCurSel += 1;
+	if (m_iFirstSelect >= iIndex) m_iFirstSelect += 1;
 	return true;
 }
 
@@ -326,7 +499,14 @@ bool CListCtrlUI::Remove(CControlUI* pControl)
 	if( iIndex == m_iCurSel && m_iCurSel >= 0 ) {
 		int iSel = m_iCurSel;
 		m_iCurSel = -1;
-		SelectItem(FindSelectable(iSel, false));
+		CControlUI* p = CContainerUI::GetItemAt(FindSelectable(iSel, false));
+		if (p != NULL)
+		{
+			IListItemUI* pListItem = static_cast<IListItemUI*>(p->GetInterface(_T("ListItem")));
+			if( pListItem != NULL ) {
+				pListItem->Select();
+			}
+		}
 	}
 	else if( iIndex < m_iCurSel ) m_iCurSel -= 1;
 	return true;
@@ -345,7 +525,14 @@ bool CListCtrlUI::RemoveAt(int iIndex)
 	if( iIndex == m_iCurSel && m_iCurSel >= 0 ) {
 		int iSel = m_iCurSel;
 		m_iCurSel = -1;
-		SelectItem(FindSelectable(iSel, false));
+		CControlUI* p = CContainerUI::GetItemAt(FindSelectable(iSel, false));
+		if (p != NULL)
+		{
+			IListItemUI* pListItem = static_cast<IListItemUI*>(p->GetInterface(_T("ListItem")));
+			if( pListItem != NULL ) {
+				pListItem->Select();
+			}
+		}
 	}
 	else if( iIndex < m_iCurSel ) m_iCurSel -= 1;
 	return true;
@@ -354,6 +541,8 @@ bool CListCtrlUI::RemoveAt(int iIndex)
 void CListCtrlUI::RemoveAll()
 {
 	m_iCurSel = -1;
+	m_iFirstSelect = -1;
+	m_iSelectCount = 0;
 	CContainerUI::RemoveAll();
 }
 
@@ -513,6 +702,197 @@ void CListCtrlUI::SetItemShowHtml(bool bShowHtml /*= true*/)
 	NeedUpdate();
 }
 
+DWORD CListCtrlUI::GetItemBkColor() const
+{
+	return m_ListInfo.dwBkColor;
+}
+
+void CListCtrlUI::SetSelectedFrameImage(LPCTSTR pStrImage)
+{
+	if( m_ListInfo.diSelectedFrame.sDrawString == pStrImage && m_ListInfo.diSelectedFrame.pImageInfo != NULL ) return;
+	m_ListInfo.diSelectedFrame.Clear();
+	m_ListInfo.diSelectedFrame.sDrawString = pStrImage;
+	Invalidate();
+}
+
+DuiLib::TDrawInfo CListCtrlUI::GetSelectedFrameImage()
+{
+	return m_ListInfo.diSelectedFrame;
+}
+
+bool CListCtrlUI::SelectRange(int iIndex, bool bTakeFocus)
+{
+	if (m_iCurSel == -1)
+	{
+		m_iCurSel = 0;
+		m_iFirstSelect = 0;
+	}
+
+	int i = 0;
+	int iFirst = m_iFirstSelect;
+	int iLast = iIndex;
+	int iCount = GetCount();
+
+	if(iFirst == iLast) return true;
+	CControlUI* pControl = CContainerUI::GetItemAt(iIndex);
+	if( pControl == NULL ) return false;
+	/*if( !pControl->IsVisible() ) return false;
+	if( !pControl->IsEnabled() ) return false;*/
+
+	IListItemUI* pListItem = static_cast<IListItemUI*>(pControl->GetInterface(_T("ListItem")));
+	if( pListItem == NULL ) return false;
+	if( !pListItem->Select(true, false) ) {
+		m_iCurSel = -1;
+		return false;
+	}
+	m_iSelectCount++;
+	//m_iCurSel = iIndex;
+	EnsureVisible(iIndex);
+	if( bTakeFocus ) pControl->SetFocus();
+	if( m_pManager != NULL ) {
+		m_pManager->SendNotify(this, DUI_MSGTYPE_ITEMSELECTMUTIL, iIndex, m_iCurSel);
+	}
+	//locate (and select) either first or last
+	// (so order is arbitrary)
+	while(i<iCount){
+		if(i==iFirst || i == iLast){
+			i++;
+			break;
+		}
+
+		CControlUI* pControl = CContainerUI::GetItemAt(i);
+		if( pControl != NULL) {
+			IListItemUI* pListItem = static_cast<IListItemUI*>(pControl->GetInterface(_T("ListItem")));
+			if( pListItem == NULL ) continue;
+			if (pListItem->IsSelected())
+			{
+				pListItem->Select(false,false);
+				m_iSelectCount--;
+			}
+		}
+		i++;
+	}
+
+	// select rest of range
+	while(i<iCount){
+		CControlUI* pControl = CContainerUI::GetItemAt(i);
+		if( pControl != NULL) {
+			IListItemUI* pListItem = static_cast<IListItemUI*>(pControl->GetInterface(_T("ListItem")));
+			if( pListItem == NULL ) continue;
+			if (pListItem->IsSelected() == false)
+			{
+				pListItem->Select(true,false);
+				m_iSelectCount++;
+			}
+		}
+		if(i==iFirst || i == iLast){
+			i++;
+			break;
+		}
+		i++;
+	}
+
+	// unselect rest of range
+	while(i<iCount){
+		CControlUI* pControl = CContainerUI::GetItemAt(i);
+		if( pControl != NULL) {
+			IListItemUI* pListItem = static_cast<IListItemUI*>(pControl->GetInterface(_T("ListItem")));
+			if( pListItem == NULL ) continue;
+			if (pListItem->IsSelected())
+			{
+				pListItem->Select(false,false);
+				m_iSelectCount--;
+			}
+		}
+		i++;
+	}
+
+	return true;
+}
+
+bool CListCtrlUI::SelectMulti(int iIndex, bool bSelect/*=true*/)
+{
+	CControlUI* pControl = GetItemAt(iIndex);
+	if( pControl != NULL) {
+		IListItemUI* pListItem = static_cast<IListItemUI*>(pControl->GetInterface(_T("ListItem")));
+		if( pListItem == NULL ) return false;
+		if (pListItem->IsSelected() != bSelect)
+		{
+			pListItem->SelectMulti(bSelect);
+			if (bSelect)
+			{
+				m_iSelectCount++;
+				if (m_iCurSel == -1)
+				{
+					m_iFirstSelect = m_iCurSel = iIndex;
+				}
+			}
+			else
+			{
+				m_iSelectCount--;
+				if (m_iCurSel == iIndex)
+				{
+					if (m_iSelectCount == 0)
+					{
+						m_iFirstSelect = m_iCurSel = -1;
+					}
+					else
+					{
+						//找到第一个选项
+						for (int i=0; i<GetCount(); i++)
+						{
+							CControlUI* pControl = GetItemAt(i);
+							if( pControl != NULL) {
+								IListItemUI* pListItem = static_cast<IListItemUI*>(pControl->GetInterface(_T("ListItem")));
+								if( pListItem == NULL ) continue;;
+								if (pListItem->IsSelected())
+								{
+									m_iCurSel = m_iFirstSelect = i;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return true;
+}
+
+int CListCtrlUI::GetSelectCount()
+{
+	return m_iSelectCount;
+}
+
+void CListCtrlUI::UpdateSelectionForRect(RECT rect)
+{
+	RECT rcTemp = { 0 };
+	for (int iIndex = 0; iIndex<GetCount();iIndex++)
+	{
+		CControlUI * pControl = GetItemAt(iIndex);
+		if( pControl == NULL) { continue;}
+		CListCtrlItemElementUI* pListElement = static_cast<CListCtrlItemElementUI*>(pControl);
+		RECT rectItem = pListElement->GetPos();
+
+		if( ::IntersectRect(&rcTemp, &rect, &pListElement->GetPos()) )
+		{//item in rect
+			if (pListElement->IsSelected() == false)
+			{
+				pListElement->Select(true,false);
+				SelectItem(iIndex, false, true);
+			}
+		}else
+		{//item not in rect
+			if (pListElement->IsSelected())
+			{
+				pListElement->Select(false,false);
+				SelectItem(iIndex, false, true);
+			}
+		}
+	}
+}
+
 CListCtrlItemElementUI::CListCtrlItemElementUI() :
 m_iIndex(-1),
 m_bSelected(false)
@@ -565,6 +945,7 @@ void CListCtrlItemElementUI::DoEvent(TEventUI& event)
 	if( event.Type == UIEVENT_DBLCLICK )
 	{
 		if( IsEnabled() ) {
+			m_pManager->SendNotify(this, DUI_MSGTYPE_ITEMDBCLICK);
 			Activate();
 			Invalidate();
 		}
@@ -591,7 +972,7 @@ void CListCtrlItemElementUI::DoEvent(TEventUI& event)
 	{
 		if( IsEnabled() ){
 			m_pManager->SendNotify(this, DUI_MSGTYPE_ITEMRCLICK);
-			Select();
+			Select(true, true, true);
 			Invalidate();
 		}
 		return;
@@ -687,12 +1068,43 @@ bool CListCtrlItemElementUI::IsSelected() const
 	 return m_bSelected;
 }
 
-bool CListCtrlItemElementUI::Select(bool bSelect /*= true*/)
+bool CListCtrlItemElementUI::Select(bool bSelect /*= true*/, bool bCallBack/*=true*/, bool bRclick)
 {
+	BOOL bShift = (GetKeyState(VK_SHIFT) & 0x8000);
+	BOOL bCtrl = (GetKeyState(VK_CONTROL) & 0x8000);
 	if( !IsEnabled() ) return false;
-	if( bSelect == m_bSelected ) return true;
+
+	bool bOldSelected = m_bSelected;
+
+	if(bCtrl && !bRclick)
+	{
+		m_bSelected = !m_bSelected;
+	}else
+	{
+		m_bSelected = bSelect;
+	}
+
+	if(bSelect && bCallBack && m_pOwner != NULL ) 
+	{
+		if (!bRclick || (bRclick && !bOldSelected))
+		{
+			if(bShift)
+			{
+				m_pOwner->SelectRange(m_iIndex);
+			}else
+			{
+				m_pOwner->SelectItem(m_iIndex);
+			}
+		}
+	}
+	Invalidate();
+
+	return true;
+}
+
+bool CListCtrlItemElementUI::SelectMulti(bool bSelect/*=true*/)
+{
 	m_bSelected = bSelect;
-	if( bSelect && m_pOwner != NULL ) m_pOwner->SelectItem(m_iIndex);
 	Invalidate();
 
 	return true;

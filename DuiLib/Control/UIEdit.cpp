@@ -35,6 +35,7 @@ namespace DuiLib
 		m_pOwner = pOwner;
 		RECT rcPos = CalPos();
 		UINT uStyle = WS_CHILD | ES_AUTOHSCROLL;
+		uStyle |= m_pOwner->GetHotTextStyle();
 		if( m_pOwner->IsPasswordMode() ) uStyle |= ES_PASSWORD;
 		Create(m_pOwner->GetManager()->GetPaintWindow(), NULL, uStyle, 0, rcPos);
 		HFONT hFont=NULL;
@@ -157,7 +158,7 @@ namespace DuiLib
 
 	CEditUI::CEditUI() : m_pWindow(NULL), m_uMaxChar(255), m_bReadOnly(false), 
 		m_bPasswordMode(false), m_cPasswordChar(_T('*')), m_uButtonState(0), 
-		m_dwEditbkColor(0xFFFFFFFF), m_iWindowStyls(0)
+		m_dwEditbkColor(0xFFFFFFFF), m_iWindowStyls(0),m_uHotTextStyle(DT_LEFT)
 	{
 		SetTextPadding(CDuiRect(4, 3, 4, 3));
 		SetBkColor(0xFFFFFFFF);
@@ -499,6 +500,20 @@ namespace DuiLib
 			DWORD clrColor = _tcstoul(pstrValue, &pstr, 16);
 			SetNativeEditBkColor(clrColor);
 		}
+		else if( _tcscmp(pstrName, _T("hotalign")) == 0 ) {
+			if( _tcsstr(pstrValue, _T("left")) != NULL ) {
+				m_uHotTextStyle &= ~(DT_CENTER | DT_RIGHT | DT_SINGLELINE);
+				m_uHotTextStyle |= DT_LEFT;
+			}
+			if( _tcsstr(pstrValue, _T("center")) != NULL ) {
+				m_uHotTextStyle &= ~(DT_LEFT | DT_RIGHT );
+				m_uHotTextStyle |= DT_CENTER;
+			}
+			if( _tcsstr(pstrValue, _T("right")) != NULL ) {
+				m_uHotTextStyle &= ~(DT_LEFT | DT_CENTER | DT_SINGLELINE);
+				m_uHotTextStyle |= DT_RIGHT;
+			}
+		}
 		else CLabelUI::SetAttribute(pstrName, pstrValue);
 	}
 
@@ -554,4 +569,16 @@ namespace DuiLib
 
 		}
 	}
+
+	void CEditUI::SetHotTextStyle(UINT uStyle)
+	{
+		m_uHotTextStyle = uStyle;
+		Invalidate();
+	}
+
+	UINT CEditUI::GetHotTextStyle() const
+	{
+		return m_uHotTextStyle;
+	}
+
 }

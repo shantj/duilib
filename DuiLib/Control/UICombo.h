@@ -31,6 +31,7 @@ public:
 
     int GetCurSel() const;  
     bool SelectItem(int iIndex, bool bTakeFocus = false);
+	bool SelectRange(int iIndex, bool bTakeFocus = false);
 
     bool SetItemIndex(CControlUI* pControl, int iIndex);
     bool Add(CControlUI* pControl);

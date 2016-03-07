@@ -75,10 +75,11 @@ public:
     HWND Subclass(HWND hWnd);
     void Unsubclass();
     void ShowWindow(bool bShow = true, bool bTakeFocus = true);
-    UINT ShowModal();
+    UINT ShowModal(bool bShow = true);
     void Close(UINT nRet = IDOK);
     void CenterWindow();	// 居中，支持扩展屏幕
     void SetIcon(UINT nRes);
+	HWND GetParentHwnd() const;
 
     LRESULT SendMessage(UINT uMsg, WPARAM wParam = 0, LPARAM lParam = 0L);
     LRESULT PostMessage(UINT uMsg, WPARAM wParam = 0, LPARAM lParam = 0L);
@@ -99,6 +100,7 @@ protected:
     HWND m_hWnd;
     WNDPROC m_OldWndProc;
     bool m_bSubclassed;
+	HWND m_hParent;
 };
 
 } // namespace DuiLib

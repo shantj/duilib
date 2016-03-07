@@ -829,9 +829,9 @@ namespace DuiLib
 		if (_tcsicmp(pControl->GetClass(), _T("TreeNodeUI")) != 0)
 			return -1;
 
-		CTreeNodeUI* pParent = static_cast<CTreeNodeUI*>(GetItemAt(iIndex));
+		/*CTreeNodeUI* pParent = static_cast<CTreeNodeUI*>(GetItemAt(iIndex));
 		if(!pParent)
-			return -1;
+			return -1;*/
 
 		pControl->OnNotify += MakeDelegate(this,&CTreeViewUI::OnDBClickItem);
 		pControl->GetFolderButton()->OnNotify += MakeDelegate(this,&CTreeViewUI::OnFolderChanged);
@@ -1062,9 +1062,13 @@ namespace DuiLib
 				{
 					CTreeNodeUI* pItem = _TreeNode->GetChildNode(nIndex);
 					pItem->SetVisible(_Expanded);
+					if (_Expanded == false)
+					{
+						pItem->GetFolderButton()->Selected(!_Expanded);
+					}
 
-					if(pItem->GetCountChild() && !pItem->GetFolderButton()->IsSelected())
-						SetItemExpand(_Expanded,pItem);
+					/*if(pItem->GetCountChild() && !pItem->GetFolderButton()->IsSelected())
+						SetItemExpand(_Expanded,pItem);*/
 				}
 			}
 		}
@@ -1077,9 +1081,12 @@ namespace DuiLib
 				CTreeNodeUI* pItem = (CTreeNodeUI*)GetItemAt(nIndex);
 
 				pItem->SetVisible(_Expanded);
-
-				if(pItem->GetCountChild() && !pItem->GetFolderButton()->IsSelected())
-					SetItemExpand(_Expanded,pItem);
+				if (_Expanded == false)
+				{
+					pItem->GetFolderButton()->Selected(!_Expanded);
+				}
+				/*if(pItem->GetCountChild() && !pItem->GetFolderButton()->IsSelected())
+					SetItemExpand(_Expanded,pItem);*/
 
 				nIndex++;
 			}

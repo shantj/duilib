@@ -57,6 +57,9 @@ namespace DuiLib
 		void PaintStatusImage(HDC hDC);
 		void PaintText(HDC hDC);
 
+		void SetHotTextStyle(UINT uStyle);
+		UINT GetHotTextStyle() const;
+
 	protected:
 		CEditWnd* m_pWindow;
 
@@ -72,6 +75,8 @@ namespace DuiLib
 		TDrawInfo m_diHot;
 		TDrawInfo m_diFocused;
 		TDrawInfo m_diDisabled;
+
+		UINT	m_uHotTextStyle;
 	};
 }
 #endif // __UIEDIT_H__

@@ -47,7 +47,10 @@ namespace DuiLib
 		void PaintText(HDC hDC);
 		void PaintStatusImage(HDC hDC);
 
+		void SetMouseCursor(BOOL blFlag=TRUE);
+
 	protected:
+		BOOL m_blSetCursor;
 		UINT m_uButtonState;
 
 		DWORD m_dwHotBkColor;

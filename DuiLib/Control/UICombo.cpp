@@ -99,7 +99,7 @@ LRESULT CComboWnd::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
         // reassigned by this operation - which is why it is important to reassign
         // the items back to the righfull owner/manager when the window closes.
         m_pLayout = new CVerticalLayoutUI;
-        m_pLayout->SetManager(&m_pm, NULL, true);
+        m_pLayout->SetManager(m_pOwner->GetManager(), NULL, true);
         LPCTSTR pDefaultAttributes = m_pOwner->GetManager()->GetDefaultAttributeList(_T("VerticalLayout"));
         if( pDefaultAttributes ) {
             m_pLayout->ApplyAttributeList(pDefaultAttributes);
@@ -253,7 +253,7 @@ int CComboUI::GetCurSel() const
 
 bool CComboUI::SelectItem(int iIndex, bool bTakeFocus)
 {
-    if( m_pWindow != NULL ) m_pWindow->Close();
+    //if( m_pWindow != NULL ) m_pWindow->Close();
     if( iIndex == m_iCurSel ) return true;
     int iOldSel = m_iCurSel;
     if( m_iCurSel >= 0 ) {
@@ -277,6 +277,11 @@ bool CComboUI::SelectItem(int iIndex, bool bTakeFocus)
     Invalidate();
 
     return true;
+}
+
+bool CComboUI::SelectRange(int iIndex, bool bTakeFocus /*= false*/)
+{
+	return true;
 }
 
 bool CComboUI::SetItemIndex(CControlUI* pControl, int iIndex)

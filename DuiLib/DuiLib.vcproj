@@ -208,7 +208,7 @@
 			Name="UnicodeDebug|Win32"
 			OutputDirectory=".\Build\Debug_u"
 			IntermediateDirectory=".\Build\Debug_u"
-			ConfigurationType="2"
+			ConfigurationType="4"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC60.vsprops"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -242,13 +242,14 @@
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;UILIB_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="1"
+				RuntimeLibrary="3"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="stdafx.h"
 				PrecompiledHeaderFile=".\Build\Debug_u/DuiLib.pch"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="3"
+				CompileAs="2"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -262,25 +263,11 @@
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLinkerTool"
-				OutputFile="../bin/DuiLib_ud.dll"
-				LinkIncremental="1"
-				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories=""
-				GenerateManifest="false"
-				DelayLoadDLLs=""
-				GenerateDebugInformation="true"
-				ProgramDatabaseFile="$(OutDir)\$(TargetName).pdb"
-				BaseAddress="0x11000000"
-				ImportLibrary="../Lib/DuiLib_ud.lib"
-				TargetMachine="1"
+				Name="VCLibrarianTool"
+				OutputFile="..\..\..\Lib\DuiLib_ub.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
-				EmbedManifest="false"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -294,9 +281,6 @@
 				Name="VCFxCopTool"
 			/>
 			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
@@ -304,9 +288,9 @@
 			Name="UnicodeRelease|Win32"
 			OutputDirectory=".\Build\Release_u"
 			IntermediateDirectory=".\Build\Release_u"
-			ConfigurationType="2"
+			ConfigurationType="4"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC60.vsprops"
-			UseOfMFC="0"
+			UseOfMFC="2"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
 			>
@@ -338,6 +322,7 @@
 				AdditionalIncludeDirectories=""
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;UILIB_EXPORTS"
 				StringPooling="true"
+				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderFile=".\Build\Release_u/DuiLib.pch"
@@ -356,23 +341,11 @@
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLinkerTool"
-				OutputFile="../bin/DuiLib_u.dll"
-				LinkIncremental="1"
-				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories=""
-				GenerateManifest="false"
-				DelayLoadDLLs=""
-				BaseAddress="0x11000000"
-				ImportLibrary="../Lib/DuiLib_u.lib"
-				TargetMachine="1"
+				Name="VCLibrarianTool"
+				OutputFile="..\..\..\Lib\DuiLib_u.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
-				EmbedManifest="false"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -384,9 +357,6 @@
 			/>
 			<Tool
 				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -450,6 +420,10 @@
 				Name="Utils"
 				>
 				<File
+					RelativePath=".\Utils\DuiTrayIcon.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\Utils\stb_image.c"
 					>
 					<FileConfiguration
@@ -487,6 +461,14 @@
 				</File>
 				<File
 					RelativePath=".\Utils\UIDelegate.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\Utils\UIShadow.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\Core\UITimer.cpp"
 					>
 				</File>
 				<File
@@ -683,6 +665,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\Utils\DuiTrayIcon.h"
+					>
+				</File>
+				<File
 					RelativePath=".\Utils\FlashEventHandler.h"
 					>
 				</File>
@@ -692,6 +678,10 @@
 				</File>
 				<File
 					RelativePath=".\Utils\UIDelegate.h"
+					>
+				</File>
+				<File
+					RelativePath=".\Utils\UIShadow.h"
 					>
 				</File>
 				<File
@@ -740,6 +730,10 @@
 				</File>
 				<File
 					RelativePath=".\Core\UIRender.h"
+					>
+				</File>
+				<File
+					RelativePath=".\Core\UITimer.h"
 					>
 				</File>
 			</Filter>

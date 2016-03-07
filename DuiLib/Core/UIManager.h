@@ -2,6 +2,8 @@
 #define __UIMANAGER_H__
 
 #pragma once
+#include "..\Utils\UIShadow.h"
+#include "..\Utils\DuiTrayIcon.h"
 
 namespace DuiLib {
 /////////////////////////////////////////////////////////////////////////////////////
@@ -15,7 +17,7 @@ class CControlUI;
 
 typedef enum EVENTTYPE_UI
 {
-    UIEVENT__FIRST = 1,
+    UIEVENT__FIRST = WM_USER + 1000,
     UIEVENT__KEYBEGIN,
     UIEVENT_KEYDOWN,
     UIEVENT_KEYUP,
@@ -41,6 +43,7 @@ typedef enum EVENTTYPE_UI
     UIEVENT_TIMER,
     UIEVENT_NOTIFY,
     UIEVENT_COMMAND,
+	UIEVENT_TRAYICON,
     UIEVENT__LAST,
 };
 
@@ -223,6 +226,7 @@ public:
     void SetBackgroundTransparent(bool bTrans);
     bool IsShowUpdateRect() const;
     void SetShowUpdateRect(bool show);
+	CShadowUI* GetShadow();
 
     static HINSTANCE GetInstance();
     static CDuiString GetInstancePath();
@@ -353,6 +357,8 @@ public:
     bool PreMessageHandler(UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT& lRes);
 	void UsedVirtualWnd(bool bUsed);
 
+	CDuiTrayIcon& GetTrayObject();
+
 private:
 	CStdPtrArray* GetFoundControls();
     static CControlUI* CALLBACK __FindControlFromNameHash(CControlUI* pThis, LPVOID pData);
@@ -379,6 +385,7 @@ private:
     HWND m_hwndTooltip;
     TOOLINFO m_ToolTip;
     bool m_bShowUpdateRect;
+	CShadowUI m_shadow;
     //
     CControlUI* m_pRoot;
     CControlUI* m_pFocus;
@@ -417,6 +424,9 @@ private:
 
     //
 	TResInfo m_ResInfo;
+
+	//
+	CDuiTrayIcon mDuiTray;
 
     //
 	static HINSTANCE m_hResourceInstance;
