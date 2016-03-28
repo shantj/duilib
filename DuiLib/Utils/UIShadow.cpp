@@ -276,7 +276,7 @@ void CShadowUI::Update(HWND hParent)
 		rcBmpPart.right = data->nX;
 		rcBmpPart.bottom = data->nY;
 
-		CRenderEngine::DrawImage(hMemDC, data->hBitmap, rcPaint, rcPaint, rcBmpPart, m_rcShadowCorner, data->alphaChannel, 0xFF, true, false, false);
+		CRenderEngine::DrawImage(hMemDC, data->hBitmap, rcPaint, rcPaint, rcBmpPart, m_rcShadowCorner, data->bAlpha, 0xFF, true, false, false);
 
 	}
 	else

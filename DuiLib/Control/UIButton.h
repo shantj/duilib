@@ -33,6 +33,11 @@ namespace DuiLib
 		LPCTSTR GetHotForeImage();
 		void SetHotForeImage(LPCTSTR pStrImage);
 
+		// 对应按钮的5个状态图
+		void SetFiveStatusImage(LPCTSTR pStrImage);
+		void SetFadeAlphaDelta(BYTE uDelta);
+		BYTE GetFadeAlphaDelta();
+
 		void SetHotBkColor(DWORD dwColor);
 		DWORD GetHotBkColor() const;
 		void SetHotTextColor(DWORD dwColor);
@@ -50,6 +55,12 @@ namespace DuiLib
 		void SetMouseCursor(BOOL blFlag=TRUE);
 
 	protected:
+		enum
+		{ 
+			FADE_TIMERID = 11,
+			FADE_ELLAPSE = 30,
+		};
+
 		BOOL m_blSetCursor;
 		UINT m_uButtonState;
 
@@ -57,6 +68,8 @@ namespace DuiLib
 		DWORD m_dwHotTextColor;
 		DWORD m_dwPushedTextColor;
 		DWORD m_dwFocusedTextColor;
+		BYTE m_uFadeAlpha;
+		BYTE m_uFadeAlphaDelta;
 
 		TDrawInfo m_diNormal;
 		TDrawInfo m_diHot;

@@ -56,9 +56,9 @@ class IListOwnerUI
 public:
     virtual TListInfoUI* GetListInfo() = 0;
     virtual int GetCurSel() const = 0;
-    virtual bool SelectItem(int iIndex, bool bTakeFocus = false) = 0;
+    virtual bool SelectItem(int iIndex, bool bTakeFocus = false, bool bTriggerEvent=true) = 0;
     virtual void DoEvent(TEventUI& event) = 0;
-	virtual bool SelectRange(int iIndex, bool bTakeFocus = false) = 0;
+	virtual bool SelectRange(int iIndex, bool bTakeFocus = false, bool bTriggerEvent=true) = 0;
 };
 
 class IListUI : public IListOwnerUI
@@ -80,7 +80,7 @@ public:
     virtual IListOwnerUI* GetOwner() = 0;
     virtual void SetOwner(CControlUI* pOwner) = 0;
     virtual bool IsSelected() const = 0;
-    virtual bool Select(bool bSelect = true, bool bCallBack = true, bool bRclick = false) = 0;
+    virtual bool Select(bool bSelect = true, bool bTriggerEvent=true, bool bCallBack = true, bool bRclick = false) = 0;
 	virtual bool SelectMulti(bool bSelect=true) = 0;
     virtual bool IsExpanded() const = 0;
     virtual bool Expand(bool bExpand = true) = 0;
@@ -106,8 +106,8 @@ public:
     bool GetScrollSelect();
     void SetScrollSelect(bool bScrollSelect);
     int GetCurSel() const;
-    bool SelectItem(int iIndex, bool bTakeFocus = false);
-	bool SelectRange(int iIndex, bool bTakeFocus = false);
+    bool SelectItem(int iIndex, bool bTakeFocus = false, bool bTriggerEvent=true);
+	bool SelectRange(int iIndex, bool bTakeFocus = false, bool bTriggerEvent=true);
 
 	bool SelectMulti(int iIndex, bool bSelect=true);
 	int GetSelectCount();
@@ -232,7 +232,7 @@ public:
     void SetScrollPos(SIZE szPos);
 	void SetPos(RECT rc, bool bNeedInvalidate = true);
     void DoEvent(TEventUI& event);
-    BOOL SortItems(PULVCompareFunc pfnCompare, UINT_PTR dwData);
+    BOOL SortItems(PULVCompareFunc pfnCompare, UINT_PTR dwData, int& iCurSel);
 protected:
 	static int __cdecl ItemComareFunc(void *pvlocale, const void *item1, const void *item2);
 	int __cdecl ItemComareFunc(const void *item1, const void *item2);
@@ -343,7 +343,7 @@ public:
     void SetVisible(bool bVisible = true);
 
     bool IsSelected() const;
-    bool Select(bool bSelect = true, bool bCallBack=true, bool bRclick = false);
+    bool Select(bool bSelect = true, bool bTriggerEvent=true, bool bCallBack=true,bool bRclick = false);
 	bool SelectMulti(bool bSelect=true);
     bool IsExpanded() const;
     bool Expand(bool bExpand = true);
@@ -377,7 +377,7 @@ public:
 
     void DoEvent(TEventUI& event);
     SIZE EstimateSize(SIZE szAvailable);
-    void DoPaint(HDC hDC, const RECT& rcPaint);
+    void DoPaint(HDC hDC, const RECT& rcPaint, CControlUI* pStopControl);
 
     void DrawItemText(HDC hDC, const RECT& rcItem);
 };
@@ -438,7 +438,7 @@ public:
     void SetEnabled(bool bEnable = true);
 
     bool IsSelected() const;
-	bool Select(bool bSelect = true, bool bCallBack = true, bool bRclick = false);
+	bool Select(bool bSelect = true, bool bTriggerEvent=true, bool bCallBack = true, bool bRclick = false);
 	bool SelectMulti(bool bSelect=true);
     bool IsExpanded() const;
     bool Expand(bool bExpand = true);
@@ -448,7 +448,7 @@ public:
 
     void DoEvent(TEventUI& event);
     void SetAttribute(LPCTSTR pstrName, LPCTSTR pstrValue);
-    void DoPaint(HDC hDC, const RECT& rcPaint);
+    void DoPaint(HDC hDC, const RECT& rcPaint, CControlUI* pStopControl);
 
     void DrawItemText(HDC hDC, const RECT& rcItem);    
     void DrawItemBk(HDC hDC, const RECT& rcItem);

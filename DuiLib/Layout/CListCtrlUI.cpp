@@ -58,15 +58,15 @@ int CListCtrlUI::GetCurSel() const
 	return m_iCurSel;
 }
 
-bool CListCtrlUI::SelectItem(int iIndex, bool bTakeFocus /*= false*/)
+bool CListCtrlUI::SelectItem(int iIndex, bool bTakeFocus /*= false*/, bool bTriggerEvent)
 {
 	BOOL bCtrl = (GetKeyState(VK_CONTROL) & 0x8000);
 	// We should first unselect the currently selected item
 
-	return SelectItem(iIndex, bTakeFocus, bCtrl);
+	return SelectItem(iIndex, bTakeFocus, bCtrl, bTriggerEvent);
 }
 
-bool CListCtrlUI::SelectItem(int iIndex, bool bTakeFocus, bool ctrl)
+bool CListCtrlUI::SelectItem(int iIndex, bool bTakeFocus, bool ctrl, bool bTriggerEvent)
 {
 	if(!ctrl)
 	{
@@ -84,7 +84,7 @@ bool CListCtrlUI::SelectItem(int iIndex, bool bTakeFocus, bool ctrl)
 					}
 					if (pListItem->IsSelected())
 					{
-						pListItem->Select(false, false);
+						pListItem->Select(false, bTriggerEvent, false);
 					}
 				}
 			}
@@ -129,7 +129,7 @@ bool CListCtrlUI::SelectItem(int iIndex, bool bTakeFocus, bool ctrl)
 				}
 			}
 		}
-		if (m_pManager)
+		if (m_pManager && bTriggerEvent)
 		{
 			m_pManager->SendNotify(this, DUI_MSGTYPE_ITEMUNSELECT, m_iCurSel, iOldSel);
 		}
@@ -147,7 +147,7 @@ bool CListCtrlUI::SelectItem(int iIndex, bool bTakeFocus, bool ctrl)
 
 	EnsureVisible(m_iCurSel);
 	if( bTakeFocus ) pControl->SetFocus();
-	if( m_pManager != NULL ) 
+	if( m_pManager != NULL && bTriggerEvent) 
 	{
 		m_pManager->SendNotify(this, DUI_MSGTYPE_ITEMSELECT, m_iCurSel, iOldSel);
 	}
@@ -313,7 +313,7 @@ void CListCtrlUI::SetAttribute(LPCTSTR pstrName, LPCTSTR pstrValue)
 		szItem.cy = _tcstol(pstr + 1, &pstr, 10);   ASSERT(pstr);     
 		SetItemSize(szItem);
 	}
-	else if( _tcscmp(pstrName, _T("columns")) == 0 ) SetColumns(_ttoi(pstrValue));
+	//else if( _tcscmp(pstrName, _T("columns")) == 0 ) SetColumns(_ttoi(pstrValue));
 // 	else if( _tcscmp(pstrName, _T("header")) == 0 ) GetHeader()->SetVisible(_tcscmp(pstrValue, _T("hidden")) != 0);
 // 	else if( _tcscmp(pstrName, _T("headerbkimage")) == 0 ) GetHeader()->SetBkImage(pstrValue);
 	else if( _tcscmp(pstrName, _T("scrollselect")) == 0 ) SetScrollSelect(_tcscmp(pstrValue, _T("true")) == 0);
@@ -720,7 +720,7 @@ DuiLib::TDrawInfo CListCtrlUI::GetSelectedFrameImage()
 	return m_ListInfo.diSelectedFrame;
 }
 
-bool CListCtrlUI::SelectRange(int iIndex, bool bTakeFocus)
+bool CListCtrlUI::SelectRange(int iIndex, bool bTakeFocus, bool bTriggerEvent)
 {
 	if (m_iCurSel == -1)
 	{
@@ -741,7 +741,7 @@ bool CListCtrlUI::SelectRange(int iIndex, bool bTakeFocus)
 
 	IListItemUI* pListItem = static_cast<IListItemUI*>(pControl->GetInterface(_T("ListItem")));
 	if( pListItem == NULL ) return false;
-	if( !pListItem->Select(true, false) ) {
+	if( !pListItem->Select(true, bTriggerEvent, false) ) {
 		m_iCurSel = -1;
 		return false;
 	}
@@ -766,7 +766,7 @@ bool CListCtrlUI::SelectRange(int iIndex, bool bTakeFocus)
 			if( pListItem == NULL ) continue;
 			if (pListItem->IsSelected())
 			{
-				pListItem->Select(false,false);
+				pListItem->Select(false, bTriggerEvent, false);
 				m_iSelectCount--;
 			}
 		}
@@ -781,7 +781,7 @@ bool CListCtrlUI::SelectRange(int iIndex, bool bTakeFocus)
 			if( pListItem == NULL ) continue;
 			if (pListItem->IsSelected() == false)
 			{
-				pListItem->Select(true,false);
+				pListItem->Select(true, bTriggerEvent, false);
 				m_iSelectCount++;
 			}
 		}
@@ -800,7 +800,7 @@ bool CListCtrlUI::SelectRange(int iIndex, bool bTakeFocus)
 			if( pListItem == NULL ) continue;
 			if (pListItem->IsSelected())
 			{
-				pListItem->Select(false,false);
+				pListItem->Select(false, bTriggerEvent, false);
 				m_iSelectCount--;
 			}
 		}
@@ -879,15 +879,15 @@ void CListCtrlUI::UpdateSelectionForRect(RECT rect)
 		{//item in rect
 			if (pListElement->IsSelected() == false)
 			{
-				pListElement->Select(true,false);
-				SelectItem(iIndex, false, true);
+				pListElement->Select(true, true, false);
+				SelectItem(iIndex, false, true, true);
 			}
 		}else
 		{//item not in rect
 			if (pListElement->IsSelected())
 			{
-				pListElement->Select(false,false);
-				SelectItem(iIndex, false, true);
+				pListElement->Select(false, true, false);
+				SelectItem(iIndex, false, true, true);
 			}
 		}
 	}
@@ -972,7 +972,7 @@ void CListCtrlItemElementUI::DoEvent(TEventUI& event)
 	{
 		if( IsEnabled() ){
 			m_pManager->SendNotify(this, DUI_MSGTYPE_ITEMRCLICK);
-			Select(true, true, true);
+			Select(true, true, true, true);
 			Invalidate();
 		}
 		return;
@@ -1008,11 +1008,11 @@ void CListCtrlItemElementUI::DoEvent(TEventUI& event)
 	if( m_pOwner != NULL ) m_pOwner->DoEvent(event); else CControlUI::DoEvent(event);
 }
 
-void CListCtrlItemElementUI::DoPaint(HDC hDC, const RECT& rcPaint)
+void CListCtrlItemElementUI::DoPaint(HDC hDC, const RECT& rcPaint, CControlUI* pStopControl)
 {
 	if( !::IntersectRect(&m_rcPaint, &rcPaint, &m_rcItem) ) return;
 	DrawItemBk(hDC, m_rcItem);
-	CContainerUI::DoPaint(hDC, rcPaint);
+	CContainerUI::DoPaint(hDC, rcPaint, pStopControl);
 }
 
 void CListCtrlItemElementUI::DrawItemText(HDC hDC, const RECT& rcItem)
@@ -1068,7 +1068,7 @@ bool CListCtrlItemElementUI::IsSelected() const
 	 return m_bSelected;
 }
 
-bool CListCtrlItemElementUI::Select(bool bSelect /*= true*/, bool bCallBack/*=true*/, bool bRclick)
+bool CListCtrlItemElementUI::Select(bool bSelect /*= true*/, bool bTriggerEvent /*= true*/,bool bCallBack/*=true*/, bool bRclick)
 {
 	BOOL bShift = (GetKeyState(VK_SHIFT) & 0x8000);
 	BOOL bCtrl = (GetKeyState(VK_CONTROL) & 0x8000);

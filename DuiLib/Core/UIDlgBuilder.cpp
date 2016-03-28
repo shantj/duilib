@@ -215,11 +215,15 @@ CControlUI* CDialogBuilder::Create(IDialogBuilderCallback* pCallback, CPaintMana
                     else if( _tcsicmp(pstrName, _T("showdirty")) == 0 ) {
                         pManager->SetShowUpdateRect(_tcsicmp(pstrValue, _T("true")) == 0);
                     } 
-                    else if( _tcsicmp(pstrName, _T("alpha")) == 0 ) {
-                        pManager->SetTransparent(_ttoi(pstrValue));
+                    else if( _tcsicmp(pstrName, _T("opacity")) == 0 ) {
+                        pManager->SetOpacity(_ttoi(pstrValue));
                     } 
-                    else if( _tcsicmp(pstrName, _T("bktrans")) == 0 ) {
-                        pManager->SetBackgroundTransparent(_tcsicmp(pstrValue, _T("true")) == 0);
+					else if( _tcscmp(pstrName, _T("layeredopacity")) == 0 ) {
+						pManager->SetLayeredOpacity(_ttoi(pstrValue));
+					} 
+					else if( _tcscmp(pstrName, _T("layeredimage")) == 0 ) {
+						pManager->SetLayered(true);
+						pManager->SetLayeredImage(pstrValue);
                     } 
                     else if( _tcsicmp(pstrName, _T("disabledfontcolor")) == 0 ) {
                         if( *pstrValue == _T('#')) pstrValue = ::CharNext(pstrValue);
@@ -305,6 +309,8 @@ CControlUI* CDialogBuilder::Create(IDialogBuilderCallback* pCallback, CPaintMana
 					else if( _tcscmp(pstrName, _T("showshadow")) == 0 ) {
 						pManager->GetShadow()->ShowShadow(_tcscmp(pstrValue, _T("true")) == 0);
 					} 
+					else 
+						pManager->AddWindowCustomAttribute(pstrName, pstrValue);
                 }
             }
         }
@@ -424,6 +430,8 @@ CControlUI* CDialogBuilder::_Parse(CMarkupNode* pRoot, CControlUI* pParent, CPai
                 if( _tcsicmp(pstrClass, DUI_CTR_EDIT) == 0 )                   pControl = new CEditUI;
                 else if( _tcsicmp(pstrClass, DUI_CTR_LIST) == 0 )              pControl = new CListUI;
                 else if( _tcsicmp(pstrClass, DUI_CTR_TEXT) == 0 )              pControl = new CTextUI;
+				else if( _tcsicmp(pstrClass, DUI_CTR_HBOX) == 0 )              pControl = new CHorizontalLayoutUI;
+				else if( _tcsicmp(pstrClass, DUI_CTR_VBOX) == 0 )              pControl = new CVerticalLayoutUI;
                 break;
             case 5:
                 if( _tcsicmp(pstrClass, DUI_CTR_COMBO) == 0 )                  pControl = new CComboUI;
@@ -438,6 +446,7 @@ CControlUI* CDialogBuilder::_Parse(CMarkupNode* pRoot, CControlUI* pParent, CPai
             case 7:
                 if( _tcsicmp(pstrClass, DUI_CTR_CONTROL) == 0 )                pControl = new CControlUI;
                 else if( _tcsicmp(pstrClass, DUI_CTR_ACTIVEX) == 0 )           pControl = new CActiveXUI;
+				else if (_tcscmp(pstrClass, DUI_CTR_GIFANIM) == 0)           pControl = new CGifAnimUI;
                 break;
             case 8:
                 if( _tcsicmp(pstrClass, DUI_CTR_PROGRESS) == 0 )               pControl = new CProgressUI;
@@ -501,7 +510,7 @@ CControlUI* CDialogBuilder::_Parse(CMarkupNode* pRoot, CControlUI* pParent, CPai
 			if( pControl == NULL )
 			{
 #ifdef _DEBUG
-				DUITRACE(_T("Î´Öª¿Ø¼þ:%s"),pstrClass);
+				DUITRACE(_T("Unknow Control:%s"),pstrClass);
 #else
 				continue;
 #endif

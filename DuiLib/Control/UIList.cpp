@@ -515,7 +515,7 @@ int CListUI::GetCurSel() const
     return m_iCurSel;
 }
 
-bool CListUI::SelectItem(int iIndex, bool bTakeFocus)
+bool CListUI::SelectItem(int iIndex, bool bTakeFocus, bool bTriggerEvent)
 {
 	BOOL bCtrl = (GetKeyState(VK_CONTROL) & 0x8000);
 
@@ -533,7 +533,7 @@ bool CListUI::SelectItem(int iIndex, bool bTakeFocus)
 					{
 						if(pListItem->IsSelected())
 						{
-							pListItem->Select(false,false);
+							pListItem->Select(false, bTriggerEvent, false);
 						}
 					}
 				}
@@ -578,7 +578,7 @@ bool CListUI::SelectItem(int iIndex, bool bTakeFocus)
 				}
 			}
 		}
-		if (m_pManager)
+		if (m_pManager && bTriggerEvent)
 		{
 			m_pManager->SendNotify(this, DUI_MSGTYPE_ITEMUNSELECT, iIndex);
 		}
@@ -596,7 +596,7 @@ bool CListUI::SelectItem(int iIndex, bool bTakeFocus)
 
     EnsureVisible(m_iCurSel);
     if( bTakeFocus ) pControl->SetFocus();
-    if( m_pManager != NULL ) 
+    if( m_pManager != NULL && bTriggerEvent) 
 	{
         m_pManager->SendNotify(this, DUI_MSGTYPE_ITEMSELECT, m_iCurSel, iOldSel);
     }
@@ -604,7 +604,7 @@ bool CListUI::SelectItem(int iIndex, bool bTakeFocus)
     return true;
 }
 
-bool CListUI::SelectRange(int iIndex, bool bTakeFocus /*= false*/)
+bool CListUI::SelectRange(int iIndex, bool bTakeFocus, bool bTriggerEvent)
 {
 	if (m_iCurSel == -1)
 	{
@@ -625,7 +625,7 @@ bool CListUI::SelectRange(int iIndex, bool bTakeFocus /*= false*/)
 
 	IListItemUI* pListItem = static_cast<IListItemUI*>(pControl->GetInterface(_T("ListItem")));
 	if( pListItem == NULL ) return false;
-	if( !pListItem->Select(true,false) ) {
+	if( !pListItem->Select(true, bTriggerEvent, false) ) {
 		m_iCurSel = -1;
 		return false;
 	}
@@ -633,7 +633,7 @@ bool CListUI::SelectRange(int iIndex, bool bTakeFocus /*= false*/)
 	//m_iCurSel = iIndex;
 	EnsureVisible(iIndex);
 	if( bTakeFocus ) pControl->SetFocus();
-	if( m_pManager != NULL ) 
+	if( m_pManager != NULL && bTriggerEvent) 
 	{
 		m_pManager->SendNotify(this, DUI_MSGTYPE_ITEMSELECTMUTIL, iFirst, iLast);
 	}
@@ -651,7 +651,7 @@ bool CListUI::SelectRange(int iIndex, bool bTakeFocus /*= false*/)
 			if( pListItem == NULL ) continue;
 			if (pListItem->IsSelected())
 			{
-				pListItem->Select(false,false);
+				pListItem->Select(false, bTriggerEvent, false);
 				m_iSelectCount--;
 			}
 		}
@@ -666,7 +666,7 @@ bool CListUI::SelectRange(int iIndex, bool bTakeFocus /*= false*/)
 			if( pListItem == NULL ) continue;
 			if (pListItem->IsSelected() == false)
 			{
-				pListItem->Select(true,false);
+				pListItem->Select(true, bTriggerEvent, false);
 				m_iSelectCount++;
 			}
 		}
@@ -685,7 +685,7 @@ bool CListUI::SelectRange(int iIndex, bool bTakeFocus /*= false*/)
 			if( pListItem == NULL ) continue;
 			if (pListItem->IsSelected())
 			{
-				pListItem->Select(false,false);
+				pListItem->Select(false, bTriggerEvent, false);
 				m_iSelectCount--;
 			}
 		}
@@ -1229,7 +1229,14 @@ BOOL CListUI::SortItems(PULVCompareFunc pfnCompare, UINT_PTR dwData)
 {
 	if (!m_pList)
 		return FALSE;
-	return m_pList->SortItems(pfnCompare, dwData);	
+	int iCurSel = m_iCurSel;
+	BOOL bResult = m_pList->SortItems(pfnCompare, dwData, iCurSel);
+	if (bResult) {
+		m_iCurSel = iCurSel;
+		EnsureVisible(m_iCurSel);
+		NeedUpdate();
+	}
+	return bResult;
 }
 
 DuiLib::TDrawInfo CListUI::GetSelectedItemDrawInfo()
@@ -1267,13 +1274,15 @@ CListBodyUI::CListBodyUI(CListUI* pOwner) : m_pOwner(pOwner)
     ASSERT(m_pOwner);
 }
 
-BOOL CListBodyUI::SortItems(PULVCompareFunc pfnCompare, UINT_PTR dwData)
+BOOL CListBodyUI::SortItems(PULVCompareFunc pfnCompare, UINT_PTR dwData, int& iCurSel)
 {
 	if (!pfnCompare)
 		return FALSE;
 	m_pCompareFunc = pfnCompare;
+	CControlUI *pCurSelControl = GetItemAt(iCurSel);
 	CControlUI **pData = (CControlUI **)m_items.GetData();
 	qsort_s(m_items.GetData(), m_items.GetSize(), sizeof(CControlUI*), CListBodyUI::ItemComareFunc, this);	
+	if (pCurSelControl) iCurSel = GetItemIndex(pCurSelControl);
 	IListItemUI *pItem = NULL;
 	for (int i = 0; i < m_items.GetSize(); ++i)
 	{
@@ -1281,14 +1290,7 @@ BOOL CListBodyUI::SortItems(PULVCompareFunc pfnCompare, UINT_PTR dwData)
 		if (pItem)
 		{
 			pItem->SetIndex(i);
-			pItem->Select(false);
 		}
-	}
-	m_pOwner->SelectItem(-1);
-	if (m_pManager)
-	{
-		SetPos(GetPos());
-		Invalidate();
 	}
 
 	return TRUE;
@@ -1388,7 +1390,6 @@ void CListBodyUI::SetPos(RECT rc, bool bNeedInvalidate)
         }
         cyFixed += sz.cy + pControl->GetPadding().top + pControl->GetPadding().bottom;
 
-        RECT rcPadding = pControl->GetPadding();
         sz.cx = MAX(sz.cx, 0);
         if( sz.cx < pControl->GetMinWidth() ) sz.cx = pControl->GetMinWidth();
         if( sz.cx > pControl->GetMaxWidth() ) sz.cx = pControl->GetMaxWidth();
@@ -1461,28 +1462,6 @@ void CListBodyUI::SetPos(RECT rc, bool bNeedInvalidate)
     }
     cyNeeded += (nEstimateNum - 1) * m_iChildPadding;
 
-    if( m_pHorizontalScrollBar != NULL ) {
-        if( cxNeeded > rc.right - rc.left ) {
-            if( m_pHorizontalScrollBar->IsVisible() ) {
-                m_pHorizontalScrollBar->SetScrollRange(cxNeeded - (rc.right - rc.left));
-            }
-            else {
-                m_pHorizontalScrollBar->SetVisible(true);
-                m_pHorizontalScrollBar->SetScrollRange(cxNeeded - (rc.right - rc.left));
-                m_pHorizontalScrollBar->SetScrollPos(0);
-                rc.bottom -= m_pHorizontalScrollBar->GetFixedHeight();
-            }
-        }
-        else {
-            if( m_pHorizontalScrollBar->IsVisible() ) {
-                m_pHorizontalScrollBar->SetVisible(false);
-                m_pHorizontalScrollBar->SetScrollRange(0);
-                m_pHorizontalScrollBar->SetScrollPos(0);
-                rc.bottom += m_pHorizontalScrollBar->GetFixedHeight();
-            }
-        }
-    }
-
     // Process the scrollbar
     ProcessScrollBar(rc, cxNeeded, cyNeeded);
 }
@@ -1495,7 +1474,27 @@ void CListBodyUI::DoEvent(TEventUI& event)
         return;
     }
 
-    if( m_pOwner != NULL ) m_pOwner->DoEvent(event); else CControlUI::DoEvent(event);
+    if( m_pOwner != NULL ) {
+		if (event.Type == UIEVENT_SCROLLWHEEL) {
+			if (m_pHorizontalScrollBar != NULL && m_pHorizontalScrollBar->IsVisible() && m_pHorizontalScrollBar->IsEnabled()) {
+				RECT rcHorizontalScrollBar = m_pHorizontalScrollBar->GetPos();
+				if( ::PtInRect(&rcHorizontalScrollBar, event.ptMouse) ) 
+				{
+					switch( LOWORD(event.wParam) ) {
+					case SB_LINEUP:
+						m_pOwner->LineLeft();
+						return;
+					case SB_LINEDOWN:
+						m_pOwner->LineRight();
+						return;
+					}
+				}
+			}
+		}
+		m_pOwner->DoEvent(event); }
+	else {
+		CControlUI::DoEvent(event);
+	}
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -2043,12 +2042,12 @@ bool CListElementUI::IsSelected() const
     return m_bSelected;
 }
 
-bool CListElementUI::Select(bool bSelect, bool bCallBack, bool bRclick)
+bool CListElementUI::Select(bool bSelect, bool bTriggerEvent, bool bCallBack, bool bRclick)
 {
     if( !IsEnabled() ) return false;
     if( bSelect == m_bSelected ) return true;
     m_bSelected = bSelect;
-    if( bSelect && bCallBack && m_pOwner != NULL ) m_pOwner->SelectItem(m_iIndex);
+    if( bSelect && bCallBack && m_pOwner != NULL ) m_pOwner->SelectItem(m_iIndex, false, bTriggerEvent);
     Invalidate();
 
     return true;
@@ -2241,9 +2240,8 @@ SIZE CListLabelElementUI::EstimateSize(SIZE szAvailable)
     return cXY;
 }
 
-void CListLabelElementUI::DoPaint(HDC hDC, const RECT& rcPaint)
+void CListLabelElementUI::DoPaint(HDC hDC, const RECT& rcPaint, CControlUI* pStopControl)
 {
-    if( !::IntersectRect(&m_rcPaint, &rcPaint, &m_rcItem) ) return;
     DrawItemBk(hDC, m_rcItem);
     DrawItemText(hDC, m_rcItem);
 }
@@ -2278,6 +2276,7 @@ void CListLabelElementUI::DrawItemText(HDC hDC, const RECT& rcItem)
         CRenderEngine::DrawText(hDC, m_pManager, rcText, m_sText, iTextColor, \
         pInfo->nFont, DT_SINGLELINE | pInfo->uTextStyle);
 }
+
 
 /////////////////////////////////////////////////////////////////////////////////////
 //
@@ -2587,7 +2586,7 @@ bool CListContainerElementUI::IsSelected() const
     return m_bSelected;
 }
 
-bool CListContainerElementUI::Select(bool bSelect, bool bCallBack, bool bRclick)
+bool CListContainerElementUI::Select(bool bSelect, bool bTriggerEvent, bool bCallBack, bool bRclick)
 {
 	BOOL bShift = (GetKeyState(VK_SHIFT) & 0x8000);
 	BOOL bCtrl = (GetKeyState(VK_CONTROL) & 0x8000);
@@ -2609,10 +2608,10 @@ bool CListContainerElementUI::Select(bool bSelect, bool bCallBack, bool bRclick)
 		{
 			if(bShift)
 			{
-				m_pOwner->SelectRange(m_iIndex);
+				m_pOwner->SelectRange(m_iIndex,bTriggerEvent);
 			}else
 			{
-				m_pOwner->SelectItem(m_iIndex);
+				m_pOwner->SelectItem(m_iIndex, false, bTriggerEvent);
 			}
 		}
 	}
@@ -2677,7 +2676,7 @@ void CListContainerElementUI::DoEvent(TEventUI& event)
 	{
 		if( IsEnabled() ){
 			m_pManager->SendNotify(this, DUI_MSGTYPE_ITEMRCLICK);
-			Select(true, true, true);
+			Select(true, true, true, true);
 			Invalidate();
 		}
 		return;
@@ -2719,11 +2718,10 @@ void CListContainerElementUI::SetAttribute(LPCTSTR pstrName, LPCTSTR pstrValue)
     else CContainerUI::SetAttribute(pstrName, pstrValue);
 }
 
-void CListContainerElementUI::DoPaint(HDC hDC, const RECT& rcPaint)
+void CListContainerElementUI::DoPaint(HDC hDC, const RECT& rcPaint, CControlUI* pStopControl)
 {
-    if( !::IntersectRect(&m_rcPaint, &rcPaint, &m_rcItem) ) return;
     DrawItemBk(hDC, m_rcItem);
-    CContainerUI::DoPaint(hDC, rcPaint);
+    CContainerUI::DoPaint(hDC, rcPaint, pStopControl);
 }
 
 void CListContainerElementUI::DrawItemText(HDC hDC, const RECT& rcItem)

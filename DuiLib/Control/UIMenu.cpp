@@ -610,7 +610,7 @@ namespace DuiLib {
 		return CListContainerElementUI::GetInterface(pstrName);
 	}
 
-	void CMenuElementUI::DoPaint(HDC hDC, const RECT& rcPaint)
+	void CMenuElementUI::DoPaint(HDC hDC, const RECT& rcPaint, CControlUI* pStopControl)
 	{
 		if( !::IntersectRect(&m_rcPaint, &rcPaint, &m_rcItem) ) return;
 
@@ -628,7 +628,7 @@ namespace DuiLib {
 			for (int i = 0; i < GetCount(); ++i)
 			{
 				if (GetItemAt(i)->GetInterface(_T("MenuElement")) == NULL)
-					GetItemAt(i)->DoPaint(hDC, rcPaint);
+					GetItemAt(i)->DoPaint(hDC, rcPaint, pStopControl);
 			}
 		}
 	}

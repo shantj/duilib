@@ -19,7 +19,7 @@ public:
 	CListHeaderUI* GetHeader() const;
 	TListInfoUI* GetListInfo();
 	int GetCurSel() const;
-	bool SelectItem(int iIndex, bool bTakeFocus = false);
+	bool SelectItem(int iIndex, bool bTakeFocus = false, bool bTriggerEvent=true);
 	void DoEvent(TEventUI& event);
 	void SetAttribute(LPCTSTR pstrName, LPCTSTR pstrValue);
 
@@ -73,13 +73,13 @@ public:
 	void SetSelectedFrameImage(LPCTSTR pStrImage);
 	TDrawInfo GetSelectedFrameImage();
 
-	bool SelectRange(int iIndex, bool bTakeFocus=false);
+	bool SelectRange(int iIndex, bool bTakeFocus = false, bool bTriggerEvent=true);
 	bool SelectMulti(int iIndex, bool bSelect=true);
 	int GetSelectCount();
 
 private:
 	void UpdateSelectionForRect(RECT rect);
-	bool SelectItem(int iIndex, bool bTakeFocus, bool ctrl);
+	bool SelectItem(int iIndex, bool bTakeFocus, bool ctrl, bool bTriggerEvent=true);
 
 protected:
 	int m_iCurSel;
@@ -112,13 +112,13 @@ public:
 	void SetOwner(CControlUI* pOwner);
 
 	void DoEvent(TEventUI& event);
-	void DoPaint(HDC hDC, const RECT& rcPaint);
+	void DoPaint(HDC hDC, const RECT& rcPaint, CControlUI* pStopControl);
 
 	void DrawItemText(HDC hDC, const RECT& rcItem);    
 	void DrawItemBk(HDC hDC, const RECT& rcItem);
 
 	bool IsSelected() const;
-	bool Select(bool bSelect = true, bool bCallBack=true, bool bRclick = false);
+	bool Select(bool bSelect = true, bool bTriggerEvent = true, bool bCallBack=true, bool bRclick = false);
 	bool SelectMulti(bool bSelect=true);
 
 	void SetPos(RECT rc, bool bNeedInvalidate /* = true */);

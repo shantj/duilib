@@ -30,8 +30,10 @@ public:
     void SetDropBoxSize(SIZE szDropBox);
 
     int GetCurSel() const;  
-    bool SelectItem(int iIndex, bool bTakeFocus = false);
-	bool SelectRange(int iIndex, bool bTakeFocus = false);
+	bool GetSelectCloseFlag();
+	void SetSelectCloseFlag(bool flag);
+	bool SelectItem(int iIndex, bool bTakeFocus = false, bool bTriggerEvent=true);
+	bool SelectRange(int iIndex, bool bTakeFocus = false, bool bTriggerEvent=true);
 
     bool SetItemIndex(CControlUI* pControl, int iIndex);
     bool Add(CControlUI* pControl);
@@ -42,6 +44,8 @@ public:
 
     bool Activate();
 
+	bool GetShowText() const;
+	void SetShowText(bool flag);
     RECT GetTextPadding() const;
     void SetTextPadding(RECT rc);
     LPCTSTR GetNormalImage() const;
@@ -97,7 +101,7 @@ public:
     void DoEvent(TEventUI& event);
     void SetAttribute(LPCTSTR pstrName, LPCTSTR pstrValue);
     
-    void DoPaint(HDC hDC, const RECT& rcPaint);
+    void DoPaint(HDC hDC, const RECT& rcPaint, CControlUI* pStopControl);
     void PaintText(HDC hDC);
     void PaintStatusImage(HDC hDC);
 
@@ -105,6 +109,8 @@ protected:
     CComboWnd* m_pWindow;
 
     int m_iCurSel;
+	bool m_bShowText;
+	bool m_bSelectCloseFlag;
     RECT m_rcTextPadding;
     CDuiString m_sDropBoxAttributes;
     SIZE m_szDropBox;

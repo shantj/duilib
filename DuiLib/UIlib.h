@@ -109,6 +109,7 @@
 
 #include "Control/UIActiveX.h"
 #include "Control/UIWebBrowser.h"
+#include "Control/UIGifAnim.h"
 
 //×Ô¶¨Òå
 #include "Layout/CListCtrlUI.h"

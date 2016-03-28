@@ -8,6 +8,8 @@ namespace DuiLib
 
 //////////////////////////////////////////////////////////////////////////
 
+LPBYTE WindowImplBase::m_lpResourceZIPBuffer=NULL;
+
 DUI_BEGIN_MESSAGE_MAP(WindowImplBase,CNotifyPump)
 	DUI_ON_MSGTYPE(DUI_MSGTYPE_CLICK,OnClick)
 DUI_END_MESSAGE_MAP()
@@ -307,12 +309,15 @@ LRESULT WindowImplBase::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& 
 			dwSize = ::SizeofResource(m_PaintManager.GetResourceDll(), hResource);
 			if( dwSize == 0 )
 				return 0L;
-
-			m_PaintManager.SetResourceZip((LPBYTE)::LockResource(hGlobal), dwSize);
-
+			m_lpResourceZIPBuffer = new BYTE[ dwSize ];
+			if (m_lpResourceZIPBuffer != NULL)
+			{
+				::CopyMemory(m_lpResourceZIPBuffer, (LPBYTE)::LockResource(hGlobal), dwSize);
+			}
 #if defined(WIN32) && !defined(UNDER_CE)
 			::FreeResource(hResource);
 #endif
+			m_PaintManager.SetResourceZip(m_lpResourceZIPBuffer, dwSize);
 		}
 		break;
 	}
@@ -334,7 +339,6 @@ LRESULT WindowImplBase::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& 
 	}
 	m_PaintManager.AttachDialog(pRoot);
 	m_PaintManager.AddNotifier(this);
-	m_PaintManager.SetBackgroundTransparent(TRUE);
 
 	InitWindow();
 	return 0;
